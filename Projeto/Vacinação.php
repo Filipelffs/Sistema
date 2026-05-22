@@ -31,6 +31,9 @@ require_once "sessao.php";
       <h2 class="titulo-pagina">Status de Imunização</h2>
       <p class="subtitulo">Acompanhe as aplicações concluídas, pendentes ou atrasadas de todo o rebanho</p>
     </div>
+    <button class="btn btn-outline-success rounded-pill px-4 py-2 d-flex align-items-center gap-2" onclick="atualizarStatus()" id="btnAtualizarStatus">
+      <i class="bi bi-arrow-clockwise"></i> Atualizar Status
+    </button>
   </div>
 
   <!-- Legend Header Panel -->
@@ -68,7 +71,64 @@ require_once "sessao.php";
   <script src="menu.js"></script>
 
   <script>
-    document.addEventListener("DOMContentLoaded", function () {
+    /**
+     * Calcula o status automático de uma aplicação baseado na data.
+     * - Concluído: vacina já foi aplicada (mantém o status)
+     * - Pendente: data de aplicação é hoje ou no futuro
+     * - Atrasada: data de aplicação já passou e não foi concluída
+     */
+    function calcularStatusAutomatico(aplicacao) {
+      // Se já foi concluída/aplicada, mantém
+      if (aplicacao.status === "Concluído") {
+        return "Concluído";
+      }
+
+      // Compara a data da aplicação com a data atual
+      const hoje = new Date();
+      hoje.setHours(0, 0, 0, 0);
+
+      const dataAplicacao = new Date(aplicacao.data + "T00:00:00");
+
+      if (dataAplicacao < hoje) {
+        return "Atrasada";   // Data já passou → atrasada
+      } else {
+        return "Pendente";   // Data é hoje ou futura → pendente
+      }
+    }
+
+    /**
+     * Atualiza os status de todas as aplicações no localStorage
+     * e re-renderiza a lista.
+     */
+    function atualizarStatus() {
+      const aplicacoes = JSON.parse(localStorage.getItem("aplicacoes")) || [];
+      let alterados = 0;
+
+      aplicacoes.forEach(a => {
+        const novoStatus = calcularStatusAutomatico(a);
+        if (a.status !== novoStatus) {
+          a.status = novoStatus;
+          alterados++;
+        }
+      });
+
+      localStorage.setItem("aplicacoes", JSON.stringify(aplicacoes));
+      renderizarLista();
+
+      // Feedback visual no botão
+      const btn = document.getElementById("btnAtualizarStatus");
+      const textoOriginal = btn.innerHTML;
+      btn.innerHTML = `<i class="bi bi-check-circle-fill"></i> ${alterados} status atualizado(s)`;
+      btn.classList.remove("btn-outline-success");
+      btn.classList.add("btn-success", "text-white");
+      setTimeout(() => {
+        btn.innerHTML = textoOriginal;
+        btn.classList.remove("btn-success", "text-white");
+        btn.classList.add("btn-outline-success");
+      }, 2500);
+    }
+
+    function renderizarLista() {
       const aplicacoes = JSON.parse(localStorage.getItem("aplicacoes")) || [];
       const animais = JSON.parse(localStorage.getItem("animais")) || [];
       const container = document.getElementById("listaVacinasStatus");
@@ -87,14 +147,20 @@ require_once "sessao.php";
       aplicacoes.forEach(a => {
         const animal = animais.find(ani => ani.id === a.animalId) || { nome: "Paula", numero: "1003" };
 
+        // Calcula status automaticamente pela data
+        const statusAtual = calcularStatusAutomatico(a);
+
         let statusClass = "success";
         let badgeText = "Concluído";
-        if (a.status === "Atrasada") {
+        let badgeIcon = "bi-check-circle-fill";
+        if (statusAtual === "Atrasada") {
           statusClass = "danger";
           badgeText = "Atrasada";
-        } else if (a.status === "Pendente") {
+          badgeIcon = "bi-x-circle-fill";
+        } else if (statusAtual === "Pendente") {
           statusClass = "warning";
           badgeText = "Pendente";
+          badgeIcon = "bi-exclamation-circle-fill";
         }
 
         // Animal image
@@ -122,7 +188,7 @@ require_once "sessao.php";
                     <small class="text-muted">Data prevista: ${formattedDate}</small>
                   </div>
                   <span class="badge-status ${statusClass} px-3 py-2 fw-bold text-center" style="min-width: 100px;">
-                    ${badgeText}
+                    <i class="bi ${badgeIcon} me-1"></i>${badgeText}
                   </span>
                 </div>
               </div>
@@ -130,6 +196,10 @@ require_once "sessao.php";
           </div>
         `;
       });
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+      renderizarLista();
     });
   </script>
 </body>
