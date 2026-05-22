@@ -156,12 +156,14 @@ require_once "sessao.php";
                 <a class="btn btn-sm btn-outline-success rounded-pill px-3" href="Ficha de animal.php?id=${animal.id}">
                   <i class="bi bi-file-text"></i> Ficha
                 </a>
+                ${window.USER_SESSION.tipo === 'admin' ? `
                 <button class="btn btn-sm btn-outline-warning rounded-pill px-3" onclick="editarAnimal(${animal.id})">
                   <i class="bi bi-pencil"></i>
                 </button>
                 <button class="btn btn-sm btn-outline-danger rounded-pill px-3" onclick="excluirAnimal(${animal.id})">
                   <i class="bi bi-trash"></i>
                 </button>
+                ` : ''}
               </div>
             </div>
           </div>
