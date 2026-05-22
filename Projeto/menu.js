@@ -1,7 +1,7 @@
 document.addEventListener("DOMContentLoaded", function () {
   // Wrap existing body content in a layout structure if it has not been done already
   const body = document.body;
-  
+
   // If the page is login or register, do not inject the menu
   if (body.classList.contains("login-body")) {
     return;
@@ -14,7 +14,7 @@ document.addEventListener("DOMContentLoaded", function () {
   // Mobile Top Navbar
   const mobileNavbar = document.createElement("div");
   mobileNavbar.className = "mobile-navbar";
-  
+
   // Detect active page to show page title in header
   const currentPath = decodeURIComponent(window.location.pathname.split("/").pop());
   let pageTitle = "Vacinação Animal";
@@ -53,7 +53,7 @@ document.addEventListener("DOMContentLoaded", function () {
   sidebar.innerHTML = `
     <div>
       <a class="navbar-brand" href="Dashboard.php">
-        <i class="bi bi-plus-square-fill text-white fs-3"></i>
+        <img src="img/logo2.png" alt="Logo" width="50" height="50" class="rounded-circle">
         <span>VACINAÇÃO ANIMAL</span>
       </a>
       <ul class="nav flex-column">

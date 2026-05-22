@@ -66,11 +66,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     <div class="login-container">
         <!-- LOGO -->
         <div class="logo mb-4">
-            <img src="img/logo.png" width="120" class="mb-2">
+            <img src="img/logo.png" width="200px" height="200px" class="mb-2">
 
             <h1 class="m-0">VACINAÇÃO ANIMAL</h1>
             <p class="text-muted small">CONECTANDO A SAÚDE DO SEU ANIMAL</p>
         </div>
+
         <?php if (!empty($erro)): ?>
             <div class="alert alert-danger alert-dismissible fade show text-start" role="alert" style="border-radius: var(--border-radius-md); font-size: 0.9rem;">
                 <i class="bi bi-exclamation-triangle-fill me-2"></i> <?php echo htmlspecialchars($erro); ?>
@@ -121,7 +122,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             </div>
         </form>
     </div>
-
+    
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
