@@ -108,6 +108,43 @@ $sql_aplicacoes = "CREATE TABLE IF NOT EXISTS aplicacoes (
 )";
 $conn->query($sql_aplicacoes);
 
+// 3b. Tabela estoque_itens — unifica vacinas e medicamentos com controle de quantidade
+$sql_estoque_itens = "CREATE TABLE IF NOT EXISTS estoque_itens (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    nome VARCHAR(100) NOT NULL,
+    tipo ENUM('vacina','medicamento') NOT NULL,
+    descricao TEXT,
+    data_fabricacao DATE,
+    data_vencimento DATE NOT NULL,
+    quantidade_atual INT NOT NULL DEFAULT 0,
+    quantidade_inicial INT NOT NULL DEFAULT 0,
+    criado_por INT,
+    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    atualizado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (criado_por) REFERENCES usuarios(id_usuario) ON DELETE SET NULL
+)";
+$conn->query($sql_estoque_itens);
+echo "Tabela 'estoque_itens' criada ou já existente.<br>";
+
+// 3c. Adicionar colunas extras em aplicacoes (seguro — IF NOT EXISTS via verificação)
+$cols = $conn->query("SHOW COLUMNS FROM aplicacoes LIKE 'id_estoque_item'");
+if ($cols->num_rows == 0) {
+    $conn->query("ALTER TABLE aplicacoes ADD COLUMN id_estoque_item INT NULL AFTER id_medicamento");
+    $conn->query("ALTER TABLE aplicacoes ADD CONSTRAINT fk_apl_estoque FOREIGN KEY (id_estoque_item) REFERENCES estoque_itens(id) ON DELETE SET NULL");
+}
+
+$cols2 = $conn->query("SHOW COLUMNS FROM aplicacoes LIKE 'id_usuario'");
+if ($cols2->num_rows == 0) {
+    $conn->query("ALTER TABLE aplicacoes ADD COLUMN id_usuario INT NULL AFTER observacoes");
+    $conn->query("ALTER TABLE aplicacoes ADD CONSTRAINT fk_apl_usuario FOREIGN KEY (id_usuario) REFERENCES usuarios(id_usuario) ON DELETE SET NULL");
+}
+
+$cols3 = $conn->query("SHOW COLUMNS FROM aplicacoes LIKE 'quantidade_utilizada'");
+if ($cols3->num_rows == 0) {
+    $conn->query("ALTER TABLE aplicacoes ADD COLUMN quantidade_utilizada INT DEFAULT 1 AFTER id_usuario");
+}
+echo "Colunas de estoque em 'aplicacoes' configuradas.<br>";
+
 echo "Outras tabelas configuradas com sucesso.<br>";
 
 // 4. Seed users

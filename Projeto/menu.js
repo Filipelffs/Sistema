@@ -23,6 +23,7 @@ document.addEventListener("DOMContentLoaded", function () {
   else if (currentPath.includes("Lista de animal") || currentPath.includes("Module de animal")) pageTitle = "MÓDULO ANIMAL";
   else if (currentPath.includes("Ficha de animal")) pageTitle = "FICHA DE ANIMAL";
   else if (currentPath.includes("Lista de Vacinas")) pageTitle = "HISTÓRICO DE VACINAS";
+  else if (currentPath.includes("Estoque_Vacinas")) pageTitle = "ESTOQUE VACINAS/MED.";
   else if (currentPath.includes("Cadastro de vacina")) pageTitle = "CADASTRO DE VACINA";
   else if (currentPath.includes("Cadastro de medicamento")) pageTitle = "CADASTRO DE MEDICAMENTOS";
   else if (currentPath.includes("Registro de Aplicação")) pageTitle = "REGISTRO DE APLICAÇÃO";
@@ -103,6 +104,11 @@ document.addEventListener("DOMContentLoaded", function () {
               <li>
                 <a class="nav-link py-1 px-3 ${currentPath.includes("Registro de Aplicação") ? "fw-bold text-white" : ""}" href="Registro de Aplicação.php">
                   <i class="bi bi-plus-circle"></i> Nova Aplicação
+                </a>
+              </li>
+              <li>
+                <a class="nav-link py-1 px-3 ${currentPath.includes("Estoque_Vacinas") ? "fw-bold text-white" : ""}" href="Estoque_Vacinas.php">
+                  <i class="bi bi-box-seam"></i> Estoque Vacinas/Med.
                 </a>
               </li>
               <li>
