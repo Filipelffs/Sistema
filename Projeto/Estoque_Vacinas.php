@@ -11,7 +11,7 @@ require_once "sessao.php";
       email: <?php echo json_encode($_SESSION['usuario_email']); ?>,
       tipo:  <?php echo json_encode($_SESSION['usuario_tipo']); ?>
     };
-  </script>
+  </script> 
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Estoque Vacinas/Medicamentos - Vacinação Animal</title>
