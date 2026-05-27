@@ -60,7 +60,7 @@ require_once "sessao.php";
         <!-- Rendered dynamically -->
         <div class="alert-box danger">
           <div class="alert-content">
-            <h6>LOTE 04C-01 - Bovinos</h6>
+            <h6>LOTE 1 - Bovinos</h6>
             <p>Vacina contra <strong>Raiva</strong> vencida há 20 dias.</p>
           </div>
           <span class="badge bg-danger rounded-pill">19 Animais</span>

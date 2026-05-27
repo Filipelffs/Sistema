@@ -48,8 +48,9 @@ require_once "sessao.php";
               <label>Lote de Animais</label>
               <select id="repLote" class="form-select form-control-custom-noicon">
                 <option value="">Todos os Lotes</option>
-                <option value="LOTE 04C-01">LOTE 04C-01</option>
-                <option value="LOTE 05V-01">LOTE 05V-01</option>
+                <option value="LOTE 1">LOTE 1</option>
+                <option value="LOTE 2">LOTE 2</option>
+                <option value="LOTE 3">LOTE 3</option>
               </select>
             </div>
 

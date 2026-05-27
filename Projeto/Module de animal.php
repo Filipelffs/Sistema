@@ -57,8 +57,9 @@ require_once "sessao.php";
             <label class="form-label small fw-semibold">Filtrar por Lote</label>
             <select id="filtroLote" class="form-select" onchange="aplicarFiltros()">
               <option value="">Todos</option>
-              <option value="LOTE 04C-01">LOTE 04C-01</option>
-              <option value="LOTE 05V-01">LOTE 05V-01</option>
+              <option value="LOTE 1">LOTE 1</option>
+              <option value="LOTE 2">LOTE 2</option>
+              <option value="LOTE 3">LOTE 3</option>
             </select>
           </div>
           <div class="col-6 col-md-4">
@@ -126,7 +127,7 @@ require_once "sessao.php";
                 </ul>
               </div>
               <div class="bg-light px-3 py-2 border-top d-flex justify-content-between">
-                <small class="text-muted">${animal.lote || 'LOTE 04C-01'}</small>
+                <small class="text-muted">${animal.lote || 'LOTE 1'}</small>
                 <a href="Ficha de animal.php?id=${animal.id}" class="btn btn-sm btn-success rounded-pill px-3 py-0 fs-7">Ficha</a>
               </div>
             </div>

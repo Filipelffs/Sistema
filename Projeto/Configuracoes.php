@@ -43,8 +43,8 @@ require_once "sessao.php";
         </div>
         <div class="card-body text-center py-4">
           <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=200" id="userFoto" class="rounded-circle border mb-3 shadow-sm" width="100" height="100" style="object-fit: cover;">
-          <h4 class="fw-bold mb-1" id="userNome">Jefferson Rayldo</h4>
-          <p class="text-muted small mb-4" id="userEmail">jeffersonsantos@gmail.com</p>
+          <h4 class="fw-bold mb-1" id="userNome">julia Silva</h4>
+          <p class="text-muted small mb-4" id="userEmail">juliasilva@gmail.com</p>
 
           <!-- Edit Inputs (Hidden by default) -->
           <div id="perfilEditInputs" class="d-none text-start mb-4">
@@ -148,9 +148,9 @@ require_once "sessao.php";
   <script>
     document.addEventListener("DOMContentLoaded", function () {
       const user = JSON.parse(localStorage.getItem("usuario")) || {
-        nome: "Jefferson Rayldo",
-        email: "jeffersonsantos@gmail.com",
-        foto: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=200",
+        nome: "Julia Silva",
+        email: "Juliasilva@gmail.com",
+        foto: "https://brasil.elpais.com/brasil/2017/07/30/deportes/1501429062_479994.html",
         notificacoes: true,
         lembretes: true,
         validacao: false
