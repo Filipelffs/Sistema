@@ -1,5 +1,17 @@
 <?php
 require_once "sessao.php";
+require_once "../Banco/conexao.php";
+
+$id = $_SESSION['usuario_id'];
+$isAdmin = ($_SESSION['usuario_tipo'] === 'admin');
+
+$sql = "SELECT nome, email, foto FROM usuarios WHERE id_usuario = $id";
+$res = $conn->query($sql);
+$user = $res->fetch_assoc();
+
+if (!$user['foto']) {
+    $user['foto'] = 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=200';
+}
 ?>
 <!DOCTYPE html>
 <html lang="pt-br">
@@ -10,7 +22,8 @@ require_once "sessao.php";
       id: <?php echo json_encode($_SESSION['usuario_id']); ?>,
       nome: <?php echo json_encode($_SESSION['usuario_nome']); ?>,
       email: <?php echo json_encode($_SESSION['usuario_email']); ?>,
-      tipo: <?php echo json_encode($_SESSION['usuario_tipo']); ?>
+      tipo: <?php echo json_encode($_SESSION['usuario_tipo']); ?>,
+      foto: <?php echo json_encode($user['foto']); ?>
     };
   </script>
   <meta charset="UTF-8">
@@ -36,26 +49,34 @@ require_once "sessao.php";
   <div class="row">
     <!-- Profile Card (Left) -->
     <div class="col-12 col-md-6 mb-4">
-      <div class="card card-premium shadow-sm">
+      <div class="card card-premium shadow-sm h-100">
         <div class="card-header-green">
           <span>Perfil do Usuário</span>
           <i class="bi bi-person-circle"></i>
         </div>
         <div class="card-body text-center py-4">
-          <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=200" id="userFoto" class="rounded-circle border mb-3 shadow-sm" width="100" height="100" style="object-fit: cover;">
-          <h4 class="fw-bold mb-1" id="userNome">julia Silva</h4>
-          <p class="text-muted small mb-4" id="userEmail">juliasilva@gmail.com</p>
+          <img src="<?= htmlspecialchars($user['foto']) ?>" id="userFoto" class="rounded-circle border mb-3 shadow-sm" width="100" height="100" style="object-fit: cover;">
+          <h4 class="fw-bold mb-1" id="userNome"><?= htmlspecialchars($user['nome']) ?></h4>
+          <p class="text-muted small mb-4" id="userEmail"><?= htmlspecialchars($user['email']) ?></p>
 
           <!-- Edit Inputs (Hidden by default) -->
           <div id="perfilEditInputs" class="d-none text-start mb-4">
             <div class="mb-3">
+              <label class="form-label small fw-semibold">URL da Foto de Perfil</label>
+              <input type="text" id="inputFoto" class="form-control" value="<?= htmlspecialchars($user['foto']) ?>">
+            </div>
+            
+            <div class="mb-3">
               <label class="form-label small fw-semibold">Nome Completo</label>
-              <input type="text" id="inputNome" class="form-control">
+              <input type="text" id="inputNome" class="form-control" value="<?= htmlspecialchars($user['nome']) ?>" <?= $isAdmin ? '' : 'readonly' ?>>
             </div>
             <div class="mb-3">
               <label class="form-label small fw-semibold">E-mail</label>
-              <input type="email" id="inputEmail" class="form-control">
+              <input type="email" id="inputEmail" class="form-control" value="<?= htmlspecialchars($user['email']) ?>" <?= $isAdmin ? '' : 'readonly' ?>>
             </div>
+            <?php if(!$isAdmin): ?>
+              <small class="text-warning"><i class="bi bi-info-circle"></i> Veterinários e Técnicos só podem alterar a foto de perfil.</small>
+            <?php endif; ?>
           </div>
 
           <div class="d-flex gap-2 justify-content-center">
@@ -72,14 +93,13 @@ require_once "sessao.php";
 
     <!-- Preferences & Security (Right) -->
     <div class="col-12 col-md-6 mb-4">
-      <!-- Security Panel -->
       <div class="card card-premium shadow-sm mb-4">
         <div class="card-header-green">
           <span>Segurança</span>
           <i class="bi bi-shield-lock-fill"></i>
         </div>
         <div class="card-body">
-          <a href="#" class="d-flex justify-content-between align-items-center text-decoration-none text-dark py-2" onclick="alert('Redirecionando para alteração de senha de segurança...')">
+          <a href="#" class="d-flex justify-content-between align-items-center text-decoration-none text-dark py-2">
             <div class="d-flex align-items-center gap-2">
               <i class="bi bi-key-fill text-success fs-5"></i>
               <span>Alterar senha de acesso</span>
@@ -89,55 +109,33 @@ require_once "sessao.php";
         </div>
       </div>
 
-      <!-- Preferences Panel -->
       <div class="card card-premium shadow-sm">
         <div class="card-header-green">
           <span>Preferências de Alertas</span>
           <i class="bi bi-sliders"></i>
         </div>
         <div class="card-body">
-          <!-- Notificações -->
           <div class="switch-group">
             <div>
               <h6 class="fw-bold mb-1">Notificações por Email</h6>
               <small class="text-muted">Aviso de vencimentos e vacinas atrasadas</small>
             </div>
             <div class="form-check form-switch">
-              <input class="form-check-input" type="checkbox" id="swNotificacoes" onchange="salvarPreferencias()">
+              <input class="form-check-input" type="checkbox" id="swNotificacoes" checked>
             </div>
           </div>
-
-          <!-- Lembretes -->
           <div class="switch-group">
             <div>
               <h6 class="fw-bold mb-1">Lembretes Diários</h6>
               <small class="text-muted">Relatórios resumidos sobre o rebanho</small>
             </div>
             <div class="form-check form-switch">
-              <input class="form-check-input" type="checkbox" id="swLembretes" onchange="salvarPreferencias()">
-            </div>
-          </div>
-
-          <!-- Validação de Acesso -->
-          <div class="switch-group">
-            <div>
-              <h6 class="fw-bold mb-1">Validação de Acesso</h6>
-              <small class="text-muted">Pedir senha para realizar alterações sensíveis</small>
-            </div>
-            <div class="form-check form-switch">
-              <input class="form-check-input" type="checkbox" id="swValidacao" onchange="salvarPreferencias()">
+              <input class="form-check-input" type="checkbox" id="swLembretes" checked>
             </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
-
-  <!-- Exit Button -->
-  <div class="d-grid mb-5">
-    <a href="logout.php" class="btn btn-danger btn-lg rounded-pill py-3 shadow-sm d-flex align-items-center justify-content-center gap-2">
-      <i class="bi bi-box-arrow-right"></i> Sair da Conta
-    </a>
   </div>
 
   <!-- Bootstrap JS -->
@@ -146,33 +144,7 @@ require_once "sessao.php";
   <script src="menu.js"></script>
 
   <script>
-    document.addEventListener("DOMContentLoaded", function () {
-      const user = JSON.parse(localStorage.getItem("usuario")) || {
-        nome: "Julia Silva",
-        email: "Juliasilva@gmail.com",
-        foto: "https://brasil.elpais.com/brasil/2017/07/30/deportes/1501429062_479994.html",
-        notificacoes: true,
-        lembretes: true,
-        validacao: false
-      };
-
-      // Load profile info
-      document.getElementById("userNome").innerText = user.nome;
-      document.getElementById("userEmail").innerText = user.email;
-      document.getElementById("userFoto").src = user.foto;
-
-      // Set switches state
-      document.getElementById("swNotificacoes").checked = user.notificacoes;
-      document.getElementById("swLembretes").checked = user.lembretes;
-      document.getElementById("swValidacao").checked = user.validacao;
-    });
-
     function habilitarEdicaoPerfil() {
-      const user = JSON.parse(localStorage.getItem("usuario"));
-      
-      document.getElementById("inputNome").value = user.nome;
-      document.getElementById("inputEmail").value = user.email;
-
       document.getElementById("userNome").classList.add("d-none");
       document.getElementById("userEmail").classList.add("d-none");
       
@@ -181,36 +153,37 @@ require_once "sessao.php";
       document.getElementById("btnSalvarPerfil").classList.remove("d-none");
     }
 
-    function salvarPerfil() {
-      const user = JSON.parse(localStorage.getItem("usuario"));
-      user.nome = document.getElementById("inputNome").value;
-      user.email = document.getElementById("inputEmail").value;
+    async function salvarPerfil() {
+      const btn = document.getElementById("btnSalvarPerfil");
+      btn.disabled = true;
+      btn.innerText = "Salvando...";
 
-      localStorage.setItem("usuario", JSON.stringify(user));
+      const data = {
+        foto: document.getElementById("inputFoto").value,
+        nome: document.getElementById("inputNome").value,
+        email: document.getElementById("inputEmail").value
+      };
 
-      // Update UI
-      document.getElementById("userNome").innerText = user.nome;
-      document.getElementById("userEmail").innerText = user.email;
-
-      document.getElementById("userNome").classList.remove("d-none");
-      document.getElementById("userEmail").classList.remove("d-none");
-      
-      document.getElementById("perfilEditInputs").classList.add("d-none");
-      document.getElementById("btnEditarPerfil").classList.remove("d-none");
-      document.getElementById("btnSalvarPerfil").classList.add("d-none");
-
-      alert("Perfil atualizado com sucesso!");
-    }
-
-    function salvarPreferencias() {
-      const user = JSON.parse(localStorage.getItem("usuario"));
-      user.notificacoes = document.getElementById("swNotificacoes").checked;
-      user.lembretes = document.getElementById("swLembretes").checked;
-      user.validacao = document.getElementById("swValidacao").checked;
-
-      localStorage.setItem("usuario", JSON.stringify(user));
+      try {
+        const res = await fetch('perfil_action.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        const result = await res.json();
+        if(result.success) {
+          alert(result.message);
+          window.location.reload();
+        } else {
+          alert("Erro ao atualizar perfil.");
+        }
+      } catch(e) {
+        alert("Erro de conexão.");
+      } finally {
+        btn.disabled = false;
+        btn.innerText = "Salvar Perfil";
+      }
     }
   </script>
 </body>
-
 </html>

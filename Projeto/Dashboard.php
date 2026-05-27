@@ -22,65 +22,59 @@ require_once "sessao.php";
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <!-- CSS -->
   <link rel="stylesheet" href="style.css">
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body>
 
-  <!-- Page Title and Content (menu.js will wrap this) -->
   <div class="topo-pagina d-none d-md-flex">
     <div>
       <h2 class="titulo-pagina">DASHBOARD</h2>
-      <p class="subtitulo">Visão geral do sistema de imunização animal</p>
+      <p class="subtitulo">Visão geral do sistema de imunização animal (Dados em Tempo Real)</p>
     </div>
   </div>
 
   <!-- KPI Cards -->
-  <div class="kpi-row">
-    <div class="kpi-card green">
-      <div class="kpi-title">Total de animais cadastrados</div>
-      <div class="kpi-value" id="kpiTotalAnimais">145</div>
+  <div class="kpi-row" id="kpiContainer">
+    <div class="col-12 text-center py-4" id="kpiLoading">
+      <div class="spinner-border text-success" role="status"></div>
     </div>
-    <div class="kpi-card yellow">
-      <div class="kpi-title">Vacinas Aplicadas</div>
-      <div class="kpi-value" id="kpiVacinasAplicadas">45</div>
+  </div>
+
+  <!-- Charts Section -->
+  <div class="row mt-4 mb-4">
+    <div class="col-12 col-lg-6 mb-4">
+      <div class="card card-premium shadow-sm h-100">
+        <div class="card-header-green">
+          <span class="fs-6">Animais por Lote</span>
+        </div>
+        <div class="card-body">
+          <canvas id="chartAnimaisLote"></canvas>
+        </div>
+      </div>
     </div>
-    <div class="kpi-card red">
-      <div class="kpi-title">Vacinas Atrasadas</div>
-      <div class="kpi-value" id="kpiVacinasAtrasadas">19</div>
+    
+    <div class="col-12 col-lg-6 mb-4">
+      <div class="card card-premium shadow-sm h-100">
+        <div class="card-header-green">
+          <span class="fs-6">Top Estoque (Qtd > 0)</span>
+        </div>
+        <div class="card-body">
+          <canvas id="chartEstoque"></canvas>
+        </div>
+      </div>
     </div>
   </div>
 
   <!-- Alerts Section -->
   <div class="row">
-    <div class="col-12 col-lg-6 mb-4">
+    <div class="col-12 mb-4">
       <h5 class="fw-bold mb-3 text-danger d-flex align-items-center gap-2">
-        <i class="bi bi-exclamation-triangle-fill"></i> ALERTA DE VACINAS ATRASADAS
+        <i class="bi bi-exclamation-triangle-fill"></i> ALERTA DE ANIMAIS SEM VACINAÇÃO REGISTRADA
       </h5>
       <div id="alertsAtrasadas">
         <!-- Rendered dynamically -->
-        <div class="alert-box danger">
-          <div class="alert-content">
-            <h6>LOTE 1 - Bovinos</h6>
-            <p>Vacina contra <strong>Raiva</strong> vencida há 20 dias.</p>
-          </div>
-          <span class="badge bg-danger rounded-pill">19 Animais</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="col-12 col-lg-6 mb-4">
-      <h5 class="fw-bold mb-3 text-warning d-flex align-items-center gap-2">
-        <i class="bi bi-clock-fill"></i> ALERTA DE VACINAS EM VENCIMENTO
-      </h5>
-      <div id="alertsVencimento">
-        <!-- Rendered dynamically -->
-        <div class="alert-box warning">
-          <div class="alert-content">
-            <h6>Mimosa (001)</h6>
-            <p>Vacina contra <strong>Febre Aftosa</strong> vence em 2 dias.</p>
-          </div>
-          <span class="badge bg-warning text-dark rounded-pill">Pendente</span>
-        </div>
       </div>
     </div>
   </div>
@@ -114,59 +108,108 @@ require_once "sessao.php";
 
   <!-- Script to update KPIs and Alerts dynamically -->
   <script>
-    document.addEventListener("DOMContentLoaded", function () {
-      // Read data from localStorage
-      const animais = JSON.parse(localStorage.getItem("animais")) || [];
-      const aplicacoes = JSON.parse(localStorage.getItem("aplicacoes")) || [];
-
-      // Calculate KPIs
-      // To match visual feel of mockup, use localStorage data size or fallbacks if data is small
-      const totalAnimais = animais.length > 4 ? animais.length : 145;
-      const vacinasAplicadas = aplicacoes.filter(a => a.status === "Concluído").length > 2 ? aplicacoes.filter(a => a.status === "Concluído").length + 41 : 45;
-      const vacinasAtrasadas = aplicacoes.filter(a => a.status === "Atrasada").length > 0 ? aplicacoes.filter(a => a.status === "Atrasada").length + 18 : 19;
-
-      document.getElementById("kpiTotalAnimais").innerText = totalAnimais;
-      document.getElementById("kpiVacinasAplicadas").innerText = vacinasAplicadas;
-      document.getElementById("kpiVacinasAtrasadas").innerText = vacinasAtrasadas;
-
-      // Populate Alerts dynamically based on actual status
-      const atrasadasList = aplicacoes.filter(a => a.status === "Atrasada");
-      if (atrasadasList.length > 0) {
-        const container = document.getElementById("alertsAtrasadas");
-        container.innerHTML = "";
-        atrasadasList.forEach(a => {
-          const animal = animais.find(an => an.id === a.animalId) || { nome: "Desconhecido", numero: "---" };
-          container.innerHTML += `
-            <div class="alert-box danger">
-              <div class="alert-content">
-                <h6>${animal.nome} (${animal.numero})</h6>
-                <p>Vacina contra <strong>${a.itemNome}</strong> vencida.</p>
-              </div>
-              <a href="Ficha de animal.php?id=${animal.id}" class="btn btn-sm btn-danger rounded-pill px-3">Ver Ficha</a>
+    document.addEventListener("DOMContentLoaded", async function () {
+      try {
+        const response = await fetch('dashboard_data.php');
+        const result = await response.json();
+        
+        if(result.success) {
+          const data = result.data;
+          
+          // Render KPIs
+          const kpiContainer = document.getElementById('kpiContainer');
+          kpiContainer.innerHTML = `
+            <div class="kpi-card green">
+              <div class="kpi-title">Total de animais</div>
+              <div class="kpi-value">${data.kpis.total_animais}</div>
+            </div>
+            <div class="kpi-card yellow">
+              <div class="kpi-title">Aplicações Realizadas</div>
+              <div class="kpi-value">${data.kpis.vacinas_aplicadas}</div>
+            </div>
+            <div class="kpi-card red">
+              <div class="kpi-title">Sem Aplicação (Alerta)</div>
+              <div class="kpi-value">${data.kpis.vacinas_atrasadas}</div>
             </div>
           `;
-        });
-      }
 
-      const pendentesList = aplicacoes.filter(a => a.status === "Pendente");
-      if (pendentesList.length > 0) {
-        const container = document.getElementById("alertsVencimento");
-        container.innerHTML = "";
-        pendentesList.forEach(a => {
-          const animal = animais.find(an => an.id === a.animalId) || { nome: "Desconhecido", numero: "---" };
-          container.innerHTML += `
-            <div class="alert-box warning">
-              <div class="alert-content">
-                <h6>${animal.nome} (${animal.numero})</h6>
-                <p>Vacina contra <strong>${a.itemNome}</strong> vence em breve.</p>
-              </div>
-              <a href="Ficha de animal.php?id=${animal.id}" class="btn btn-sm btn-warning text-dark rounded-pill px-3">Ver Ficha</a>
-            </div>
-          `;
-        });
+          // Render Alertas
+          const alertasContainer = document.getElementById('alertsAtrasadas');
+          if (data.alertas.length > 0) {
+            data.alertas.forEach(a => {
+              alertasContainer.innerHTML += `
+                <div class="alert-box danger mb-3">
+                  <div class="alert-content">
+                    <h6>${a.nome_animal} (${a.numero_brinco || 'N/A'})</h6>
+                    <p>Este animal não possui nenhum registro de aplicação no sistema.</p>
+                  </div>
+                  <a href="Ficha de animal.php?id=${a.id_animal}" class="btn btn-sm btn-danger rounded-pill px-3">Ver Ficha</a>
+                </div>
+              `;
+            });
+          } else {
+            alertasContainer.innerHTML = `<div class="alert alert-success rounded-pill shadow-sm"><i class="bi bi-check-circle me-2"></i> Todos os animais possuem pelo menos uma aplicação registrada.</div>`;
+          }
+
+          // Render Charts
+          renderChartAnimaisLote(data.charts.animais_lote);
+          renderChartEstoque(data.charts.estoque);
+
+        }
+      } catch (error) {
+        console.error("Erro ao carregar dashboard:", error);
       }
     });
+
+    function renderChartAnimaisLote(dados) {
+      const ctx = document.getElementById('chartAnimaisLote').getContext('2d');
+      const labels = dados.map(d => d.lote || 'Sem Lote');
+      const valores = dados.map(d => d.quantidade);
+
+      new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: labels,
+          datasets: [{
+            data: valores,
+            backgroundColor: ['#198754', '#20c997', '#ffc107', '#fd7e14', '#dc3545', '#6c757d'],
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { position: 'bottom' }
+          }
+        }
+      });
+    }
+
+    function renderChartEstoque(dados) {
+      const ctx = document.getElementById('chartEstoque').getContext('2d');
+      const labels = dados.map(d => d.nome);
+      const valores = dados.map(d => d.quantidade);
+
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Quantidade em Estoque',
+            data: valores,
+            backgroundColor: '#198754',
+            borderRadius: 5
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: { beginAtZero: true, ticks: { precision: 0 } }
+          }
+        }
+      });
+    }
   </script>
 </body>
-
 </html>

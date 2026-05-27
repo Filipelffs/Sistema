@@ -1,6 +1,17 @@
 <?php
 require_once "sessao.php";
+require_once "../Banco/conexao.php";
 checarAcesso("admin");
+
+// Fetch Lotes for the dropdown
+$sqlLotes = "SELECT id_lote, codigo_lote FROM lotes ORDER BY codigo_lote ASC";
+$resLotes = $conn->query($sqlLotes);
+$lotes = [];
+if ($resLotes) {
+    while ($r = $resLotes->fetch_assoc()) {
+        $lotes[] = $r;
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="pt-br">
@@ -41,6 +52,8 @@ checarAcesso("admin");
     </div>
     <div class="card-body">
       <form id="animalForm">
+        <div id="formAlert" class="alert d-none"></div>
+
         <!-- Nome do Animal -->
         <div class="form-group-custom mb-3">
           <label>Nome do Animal</label>
@@ -65,10 +78,15 @@ checarAcesso("admin");
           <input type="text" id="aniRaca" class="form-control-custom-noicon" placeholder="Ex: Nelore, Gir, Holandesa...">
         </div>
 
-        <!-- Lote -->
+        <!-- Lote (Vindo do BD) -->
         <div class="form-group-custom mb-3">
           <label>Lote</label>
-          <input type="text" id="aniLote" class="form-control-custom-noicon" placeholder="Ex: LOTE 04C-01" required>
+          <select id="aniLote" class="form-select form-control-custom-noicon">
+            <option value="">Selecione o Lote (Opcional)</option>
+            <?php foreach($lotes as $l): ?>
+              <option value="<?= $l['id_lote'] ?>"><?= htmlspecialchars($l['codigo_lote']) ?></option>
+            <?php endforeach; ?>
+          </select>
         </div>
 
         <!-- Sexo (Macho / Fêmea buttons) -->
@@ -104,12 +122,18 @@ checarAcesso("admin");
           </div>
         </div>
 
+        <!-- Peso -->
+        <div class="form-group-custom mb-3">
+          <label>Peso (kg)</label>
+          <input type="number" step="0.01" id="aniPeso" class="form-control-custom-noicon" placeholder="Ex: 150.5">
+        </div>
+
         <!-- Botoes Salvar e Cancelar -->
         <div class="d-flex gap-3 mt-4">
           <a href="Lista de animal.php" class="btn btn-outline-secondary py-3 fs-5 rounded-pill w-50 d-flex align-items-center justify-content-center text-decoration-none">
             Cancelar
           </a>
-          <button type="submit" class="btn-primary-custom py-3 fs-5 w-50 mt-0">
+          <button type="submit" id="btnSalvar" class="btn-primary-custom py-3 fs-5 w-50 mt-0">
             Salvar
           </button>
         </div>
@@ -138,30 +162,55 @@ checarAcesso("admin");
       }
     }
 
-    document.getElementById("animalForm").addEventListener("submit", function(e) {
+    document.getElementById("animalForm").addEventListener("submit", async function(e) {
       e.preventDefault();
 
-      const novoAnimal = {
-        id: Date.now(),
+      const btn = document.getElementById("btnSalvar");
+      const alertDiv = document.getElementById("formAlert");
+      btn.disabled = true;
+      btn.innerHTML = 'Salvando...';
+      alertDiv.classList.add('d-none');
+
+      const data = {
+        action: 'create',
         nome: document.getElementById("aniNome").value,
         numero: document.getElementById("aniNumero").value,
         especie: document.getElementById("aniEspecie").value,
-        raca: document.getElementById("aniRaca").value || "Não especificada",
-        lote: document.getElementById("aniLote").value || "Sem Lote",
+        raca: document.getElementById("aniRaca").value,
+        id_lote: document.getElementById("aniLote").value, // Vindo do Select
         sexo: document.getElementById("aniSexo").value,
-        dataNascimento: document.getElementById("aniDataNasc").value,
-        pai: document.getElementById("aniPai").value || "Não informado",
-        mae: document.getElementById("aniMae").value || "Não informado"
+        data_nascimento: document.getElementById("aniDataNasc").value,
+        pai: document.getElementById("aniPai").value,
+        mae: document.getElementById("aniMae").value,
+        peso: document.getElementById("aniPeso").value
       };
 
-      const animais = JSON.parse(localStorage.getItem("animais")) || [];
-      animais.push(novoAnimal);
-      localStorage.setItem("animais", JSON.stringify(animais));
+      try {
+        const response = await fetch('animal_action.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        const result = await response.json();
 
-      alert("Animal cadastrado com sucesso!");
-      window.location.href = "Lista de animal.php";
+        if (result.success) {
+          alert("Animal cadastrado com sucesso!");
+          window.location.href = "Lista de animal.php";
+        } else {
+          alertDiv.className = 'alert alert-danger';
+          alertDiv.textContent = result.message;
+          alertDiv.classList.remove('d-none');
+          btn.disabled = false;
+          btn.innerHTML = 'Salvar';
+        }
+      } catch (error) {
+        alertDiv.className = 'alert alert-danger';
+        alertDiv.textContent = 'Erro de comunicação com o servidor.';
+        alertDiv.classList.remove('d-none');
+        btn.disabled = false;
+        btn.innerHTML = 'Salvar';
+      }
     });
   </script>
 </body>
-
 </html>

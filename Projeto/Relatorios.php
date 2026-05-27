@@ -1,5 +1,31 @@
 <?php
 require_once "sessao.php";
+require_once "../Banco/conexao.php";
+
+// Fetch Lotes
+$sqlLotes = "SELECT id_lote, codigo_lote FROM lotes ORDER BY codigo_lote ASC";
+$resLotes = $conn->query($sqlLotes);
+$lotes = [];
+if ($resLotes) {
+    while ($r = $resLotes->fetch_assoc()) {
+        $lotes[] = $r;
+    }
+}
+
+// Fetch Aplicacoes with Animal info
+$sql = "SELECT ap.id_aplicacao, ap.data_aplicacao, ap.observacoes, a.nome_animal, a.numero_brinco, l.codigo_lote, v.nome as produto, v.tipo
+        FROM aplicacoes ap
+        JOIN animais a ON ap.id_animal = a.id_animal
+        LEFT JOIN lotes l ON a.id_lote = l.id_lote
+        JOIN vacinas_medicamentos v ON ap.id_vacina_medicamento = v.id
+        ORDER BY ap.data_aplicacao DESC LIMIT 100";
+$res = $conn->query($sql);
+$aplicacoes = [];
+if ($res) {
+    while ($r = $res->fetch_assoc()) {
+        $aplicacoes[] = $r;
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="pt-br">
@@ -28,136 +54,77 @@ require_once "sessao.php";
 
   <div class="topo-pagina d-none d-md-flex">
     <div>
-      <h2 class="titulo-pagina">Relatórios Sanitários</h2>
-      <p class="subtitulo">Gere e exporte relatórios consolidados sobre a imunização do rebanho</p>
+      <h2 class="titulo-pagina">Relatórios</h2>
+      <p class="subtitulo">Gere e visualize relatórios de aplicações (Dados Reais)</p>
     </div>
   </div>
 
-  <div class="row">
-    <!-- Filter Panel (Left) -->
-    <div class="col-12 col-lg-5 mb-4">
-      <div class="card card-premium shadow-sm">
-        <div class="card-header-green">
-          <span>Filtrar Relatórios</span>
-          <i class="bi bi-funnel-fill"></i>
+  <!-- Filtros -->
+  <div class="card card-premium mb-4">
+    <div class="card-body">
+      <h5 class="fw-bold text-success mb-3"><i class="bi bi-funnel-fill me-2"></i> Filtros</h5>
+      <form class="row g-3" id="formRelatorio">
+        <div class="col-md-4">
+          <label class="form-label">Data Início</label>
+          <input type="date" id="filtroInicio" class="form-control rounded-pill">
         </div>
-        <div class="card-body">
-          <form id="relatorioForm">
-            <!-- Lote -->
-            <div class="form-group-custom mb-3">
-              <label>Lote de Animais</label>
-              <select id="repLote" class="form-select form-control-custom-noicon">
-                <option value="">Todos os Lotes</option>
-                <option value="LOTE 1">LOTE 1</option>
-                <option value="LOTE 2">LOTE 2</option>
-                <option value="LOTE 3">LOTE 3</option>
-              </select>
-            </div>
-
-            <!-- Raça -->
-            <div class="form-group-custom mb-3">
-              <label>Raça do Animal</label>
-              <select id="repRaca" class="form-select form-control-custom-noicon">
-                <option value="">Todas as Raças</option>
-                <option value="Holandesa">Holandesa</option>
-                <option value="Gir">Gir</option>
-                <option value="Anglonubiana">Anglonubiana</option>
-                <option value="Angus">Angus</option>
-              </select>
-            </div>
-
-            <!-- Vacinação por animal -->
-            <div class="mb-3">
-              <label class="form-label fw-semibold small">Situação Vacinal</label>
-              <div class="form-check mb-2">
-                <input class="form-check-input" type="checkbox" id="chkAplicadas" checked>
-                <label class="form-check-label text-muted small" for="chkAplicadas">
-                  Vacinas Aplicadas (Concluído)
-                </label>
-              </div>
-              <div class="form-check mb-2">
-                <input class="form-check-input" type="checkbox" id="chkAtrasadas" checked>
-                <label class="form-check-label text-muted small" for="chkAtrasadas">
-                  Vacinas Atrasadas
-                </label>
-              </div>
-              <div class="form-check">
-                <input class="form-check-input" type="checkbox" id="chkPendentes" checked>
-                <label class="form-check-label text-muted small" for="chkPendentes">
-                  Vacinas Pendentes (No prazo)
-                </label>
-              </div>
-            </div>
-
-            <!-- Status do Período -->
-            <div class="mb-4">
-              <label class="form-label fw-semibold small">Período de Aplicação</label>
-              <div class="row g-2">
-                <div class="col-6">
-                  <input type="date" id="repDataInicio" class="form-control form-control-custom-noicon" placeholder="Início">
-                </div>
-                <div class="col-6">
-                  <input type="date" id="repDataFim" class="form-control form-control-custom-noicon" placeholder="Fim">
-                </div>
-              </div>
-            </div>
-
-            <!-- Botão Aplicar -->
-            <button type="button" class="btn-primary-custom py-2" onclick="gerarRelatorio()">
-              Aplicar Filtros
-            </button>
-          </form>
+        <div class="col-md-4">
+          <label class="form-label">Data Fim</label>
+          <input type="date" id="filtroFim" class="form-control rounded-pill">
         </div>
-      </div>
+        <div class="col-md-4">
+          <label class="form-label">Lote</label>
+          <select id="filtroLote" class="form-select rounded-pill">
+            <option value="">Todos os Lotes</option>
+            <?php foreach($lotes as $l): ?>
+              <option value="<?= htmlspecialchars($l['codigo_lote']) ?>"><?= htmlspecialchars($l['codigo_lote']) ?></option>
+            <?php endforeach; ?>
+          </select>
+        </div>
+        <div class="col-12 text-end mt-3">
+          <button type="button" class="btn btn-outline-secondary rounded-pill px-4 me-2" onclick="limparFiltros()">Limpar</button>
+          <button type="button" class="btn btn-success rounded-pill px-4 shadow-sm" onclick="filtrarRelatorio()"><i class="bi bi-search"></i> Buscar</button>
+        </div>
+      </form>
     </div>
+  </div>
 
-    <!-- Report Preview and Exports (Right) -->
-    <div class="col-12 col-lg-7">
-      <div class="card card-premium shadow-sm">
-        <div class="card-header-green">
-          <span>Pré-visualização do Relatório</span>
-          <div>
-            <button class="btn btn-sm btn-light rounded-pill me-1" onclick="exportarPDF()">
-              <i class="bi bi-file-pdf-fill text-danger"></i> PDF
-            </button>
-            <button class="btn btn-sm btn-light rounded-pill" onclick="imprimirRelatorio()">
-              <i class="bi bi-printer-fill text-primary"></i> Imprimir
-            </button>
-          </div>
-        </div>
-        <div class="card-body bg-white">
-          <div id="relatorioPreview" class="p-3 border rounded-3" style="min-height: 300px; background-color: #FAFAFA;">
-            <div class="text-center py-5 text-muted" id="previewPlaceholder">
-              <i class="bi bi-file-earmark-text fs-1 d-block mb-3"></i>
-              <p>Configure os filtros ao lado e clique em "Aplicar Filtros" para gerar a pré-visualização.</p>
-            </div>
-            <!-- Dynamic Preview Content -->
-            <div id="previewContent" class="d-none">
-              <h5 class="fw-bold text-center border-bottom pb-2 mb-3">Relatório de Vacinação Animal</h5>
-              <div class="row mb-3 small">
-                <div class="col-6"><strong>Lote:</strong> <span id="lblLote">Todos</span></div>
-                <div class="col-6"><strong>Raça:</strong> <span id="lblRaca">Todas</span></div>
-              </div>
-              <table class="table table-sm table-striped small">
-                <thead>
-                  <tr>
-                    <th>Animal</th>
-                    <th>Lote</th>
-                    <th>Item</th>
-                    <th>Data</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody id="tblRelatorioContent">
-                  <!-- Rows injected here -->
-                </tbody>
-              </table>
-              <div class="text-end fw-bold small mt-3">
-                Total de Registros: <span id="lblTotalRegistros">0</span>
-              </div>
-            </div>
-          </div>
-        </div>
+  <!-- Tabela de Resultados -->
+  <div class="card card-premium">
+    <div class="card-header-green d-flex justify-content-between align-items-center">
+      <span>Resultados</span>
+      <button class="btn btn-light btn-sm rounded-pill px-3 fw-bold text-success" onclick="imprimirRelatorio()">
+        <i class="bi bi-printer-fill me-1"></i> Imprimir
+      </button>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover table-striped align-middle mb-0" id="tabelaRelatorio">
+          <thead class="table-success">
+            <tr>
+              <th>Data</th>
+              <th>Animal / Brinco</th>
+              <th>Lote</th>
+              <th>Produto (Tipo)</th>
+              <th>Observações</th>
+            </tr>
+          </thead>
+          <tbody>
+            <?php if (empty($aplicacoes)): ?>
+              <tr><td colspan="5" class="text-center py-4">Nenhuma aplicação encontrada.</td></tr>
+            <?php else: ?>
+              <?php foreach($aplicacoes as $ap): ?>
+                <tr data-lote="<?= htmlspecialchars($ap['codigo_lote'] ?? '') ?>" data-data="<?= $ap['data_aplicacao'] ?>">
+                  <td><?= date('d/m/Y', strtotime($ap['data_aplicacao'])) ?></td>
+                  <td><strong><?= htmlspecialchars($ap['nome_animal']) ?></strong> <small class="text-muted">(<?= htmlspecialchars($ap['numero_brinco'] ?? '-') ?>)</small></td>
+                  <td><span class="badge bg-secondary"><?= htmlspecialchars($ap['codigo_lote'] ?? 'Sem Lote') ?></span></td>
+                  <td><?= htmlspecialchars($ap['produto']) ?> <small>(<?= ucfirst($ap['tipo']) ?>)</small></td>
+                  <td class="small text-muted"><?= htmlspecialchars($ap['observacoes']) ?></td>
+                </tr>
+              <?php endforeach; ?>
+            <?php endif; ?>
+          </tbody>
+        </table>
       </div>
     </div>
   </div>
@@ -168,92 +135,49 @@ require_once "sessao.php";
   <script src="menu.js"></script>
 
   <script>
-    function gerarRelatorio() {
-      const lote = document.getElementById("repLote").value;
-      const raca = document.getElementById("repRaca").value;
-      const chkAplicadas = document.getElementById("chkAplicadas").checked;
-      const chkAtrasadas = document.getElementById("chkAtrasadas").checked;
-      const chkPendentes = document.getElementById("chkPendentes").checked;
-      const dataInicio = document.getElementById("repDataInicio").value;
-      const dataFim = document.getElementById("repDataFim").value;
+    function filtrarRelatorio() {
+      const ini = document.getElementById("filtroInicio").value;
+      const fim = document.getElementById("filtroFim").value;
+      const lote = document.getElementById("filtroLote").value.toLowerCase();
 
-      const animais = JSON.parse(localStorage.getItem("animais")) || [];
-      const aplicacoes = JSON.parse(localStorage.getItem("aplicacoes")) || [];
+      const tbody = document.querySelector("#tabelaRelatorio tbody");
+      const rows = tbody.querySelectorAll("tr");
 
-      // Filter applications
-      let filtradas = aplicacoes.filter(apl => {
-        const animal = animais.find(a => a.id === apl.animalId);
-        if (!animal) return false;
+      let count = 0;
+      rows.forEach(tr => {
+        if (!tr.hasAttribute('data-data')) return;
 
-        // Lote Filter
-        if (lote && animal.lote !== lote) return false;
+        const rowDataStr = tr.getAttribute('data-data');
+        const rowLote = tr.getAttribute('data-lote').toLowerCase();
 
-        // Raca Filter
-        if (raca && !animal.raca.includes(raca)) return false;
+        let show = true;
+        if (lote !== "" && rowLote !== lote) show = false;
+        
+        if (show && ini !== "") {
+          if (new Date(rowDataStr) < new Date(ini)) show = false;
+        }
+        if (show && fim !== "") {
+          if (new Date(rowDataStr) > new Date(fim)) show = false;
+        }
 
-        // Status Filter
-        if (apl.status === "Concluído" && !chkAplicadas) return false;
-        if (apl.status === "Atrasada" && !chkAtrasadas) return false;
-        if (apl.status === "Pendente" && !chkPendentes) return false;
-
-        // Date Filter
-        if (dataInicio && apl.data < dataInicio) return false;
-        if (dataFim && apl.data > dataFim) return false;
-
-        return true;
+        tr.style.display = show ? "" : "none";
+        if (show) count++;
       });
-
-      // Update UI labels
-      document.getElementById("lblLote").innerText = lote ? lote : "Todos";
-      document.getElementById("lblRaca").innerText = raca ? raca : "Todas";
-
-      const tableBody = document.getElementById("tblRelatorioContent");
-      tableBody.innerHTML = "";
-
-      if (filtradas.length === 0) {
-        tableBody.innerHTML = `<tr><td colspan="5" class="text-center text-muted">Nenhum registro corresponde aos filtros selecionados.</td></tr>`;
-      } else {
-        filtradas.forEach(apl => {
-          const animal = animais.find(a => a.id === apl.animalId) || { nome: "Paula", numero: "1003", lote: "Lote" };
-          let dateStr = apl.data;
-          const parts = apl.data.split("-");
-          if(parts.length === 3) dateStr = `${parts[2]}/${parts[1]}/${parts[0]}`;
-
-          tableBody.innerHTML += `
-            <tr>
-              <td>${animal.nome} (${animal.numero})</td>
-              <td>${animal.lote || '---'}</td>
-              <td>${apl.itemNome}</td>
-              <td>${dateStr}</td>
-              <td><span class="badge ${apl.status === 'Concluído' ? 'bg-success' : apl.status === 'Pendente' ? 'bg-warning text-dark' : 'bg-danger'}">${apl.status}</span></td>
-            </tr>
-          `;
-        });
-      }
-
-      document.getElementById("lblTotalRegistros").innerText = filtradas.length;
-
-      // Show preview
-      document.getElementById("previewPlaceholder").classList.add("d-none");
-      document.getElementById("previewContent").classList.remove("d-none");
+      
+      // Mudar visual se zero resultados e etc
     }
 
-    function exportarPDF() {
-      if (document.getElementById("previewContent").classList.contains("d-none")) {
-        alert("Gere o relatório antes de exportá-lo.");
-        return;
-      }
-      alert("Seu PDF está sendo gerado e o download iniciará em instantes!");
+    function limparFiltros() {
+      document.getElementById("formRelatorio").reset();
+      const rows = document.querySelectorAll("#tabelaRelatorio tbody tr");
+      rows.forEach(tr => {
+        tr.style.display = "";
+      });
     }
 
     function imprimirRelatorio() {
-      if (document.getElementById("previewContent").classList.contains("d-none")) {
-        alert("Gere o relatório antes de imprimi-lo.");
-        return;
-      }
       window.print();
     }
   </script>
 </body>
-
 </html>

@@ -1,9 +1,34 @@
 <?php
 require_once "sessao.php";
+require_once "../Banco/conexao.php";
+
+// Busca animais
+$sqlAnimais = "SELECT a.id_animal, a.nome_animal, a.numero_brinco, l.codigo_lote 
+               FROM animais a 
+               LEFT JOIN lotes l ON a.id_lote = l.id_lote";
+$resAnimais = $conn->query($sqlAnimais);
+$animais = [];
+if ($resAnimais) {
+    while($row = $resAnimais->fetch_assoc()) {
+        $animais[] = $row;
+    }
+}
+
+// Busca estoque disponível (qtd > 0)
+$sqlProdutos = "SELECT id, nome, tipo, quantidade, data_vencimento 
+                FROM vacinas_medicamentos 
+                WHERE quantidade > 0 
+                ORDER BY data_vencimento ASC";
+$resProdutos = $conn->query($sqlProdutos);
+$produtos = [];
+if ($resProdutos) {
+    while($row = $resProdutos->fetch_assoc()) {
+        $produtos[] = $row;
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="pt-br">
-
 <head>
   <script>
     window.USER_SESSION = {
@@ -29,7 +54,7 @@ require_once "sessao.php";
   <div class="topo-pagina d-none d-md-flex">
     <div>
       <h2 class="titulo-pagina">Registro de Aplicação</h2>
-      <p class="subtitulo">Grave a aplicação de uma vacina ou medicamento em um animal ou lote</p>
+      <p class="subtitulo">Grave a aplicação de uma vacina ou medicamento em um animal</p>
     </div>
   </div>
 
@@ -40,32 +65,55 @@ require_once "sessao.php";
     </div>
     <div class="card-body">
       <form id="aplicacaoForm">
-        <!-- Animal ou Lote -->
+        <div id="formAlert" class="alert d-none"></div>
+
+        <!-- Animal -->
         <div class="form-group-custom mb-3">
-          <label>Animal ou Lote</label>
+          <label>Animal</label>
           <select id="aplAnimal" class="form-select form-control-custom-noicon" required>
-            <!-- Rendered dynamically -->
+            <option value="">Selecione o animal...</option>
+            <?php foreach($animais as $a): ?>
+              <option value="<?= $a['id_animal'] ?>">
+                <?= htmlspecialchars($a['nome_animal']) ?> 
+                (<?= htmlspecialchars($a['numero_brinco']) ?>) - Lote: <?= htmlspecialchars($a['codigo_lote'] ?? 'Sem lote') ?>
+              </option>
+            <?php endforeach; ?>
           </select>
         </div>
 
-        <!-- Vacina ou Medicamento -->
+        <!-- Produto -->
         <div class="form-group-custom mb-3">
-          <label>Vacina ou Medicamento</label>
+          <label>Vacina ou Medicamento (Disponíveis)</label>
           <select id="aplItem" class="form-select form-control-custom-noicon" required>
-            <!-- Rendered dynamically -->
+            <option value="">Selecione o produto...</option>
+            <?php 
+              // Agrupar por tipo
+              $vacinas = array_filter($produtos, fn($p) => $p['tipo'] === 'vacina');
+              $medicamentos = array_filter($produtos, fn($p) => $p['tipo'] === 'medicamento');
+            ?>
+            <optgroup label="Vacinas">
+              <?php foreach($vacinas as $v): ?>
+                <option value="<?= $v['id'] ?>"><?= htmlspecialchars($v['nome']) ?> (Estoque: <?= $v['quantidade'] ?> | Vence: <?= date('d/m/Y', strtotime($v['data_vencimento'])) ?>)</option>
+              <?php endforeach; ?>
+            </optgroup>
+            <optgroup label="Medicamentos">
+              <?php foreach($medicamentos as $m): ?>
+                <option value="<?= $m['id'] ?>"><?= htmlspecialchars($m['nome']) ?> (Estoque: <?= $m['quantidade'] ?> | Vence: <?= date('d/m/Y', strtotime($m['data_vencimento'])) ?>)</option>
+              <?php endforeach; ?>
+            </optgroup>
           </select>
         </div>
 
         <!-- Tipo -->
         <div class="form-group-custom mb-3">
-          <label>Tipo</label>
+          <label>Tipo / Dose</label>
           <input type="text" id="aplTipo" class="form-control-custom-noicon" placeholder="Ex: 1ª dose, reforço, dose única..." required>
         </div>
 
         <!-- Data da aplicação -->
         <div class="form-group-custom mb-3">
           <label>Data da aplicação</label>
-          <input type="date" id="aplData" class="form-control-custom-noicon" required>
+          <input type="date" id="aplData" class="form-control-custom-noicon" required value="<?= date('Y-m-d') ?>">
         </div>
 
         <!-- Observações -->
@@ -76,10 +124,10 @@ require_once "sessao.php";
 
         <!-- Botoes Salvar e Cancelar -->
         <div class="d-flex gap-3 mt-4">
-          <a href="Lista de Vacinas.php" class="btn btn-outline-secondary py-3 fs-5 rounded-pill w-50 d-flex align-items-center justify-content-center text-decoration-none">
+          <a href="historico_de_vacinas.php" class="btn btn-outline-secondary py-3 fs-5 rounded-pill w-50 d-flex align-items-center justify-content-center text-decoration-none">
             Cancelar
           </a>
-          <button type="submit" class="btn-primary-custom py-3 fs-5 w-50 mt-0">
+          <button type="submit" id="btnSalvar" class="btn-primary-custom py-3 fs-5 w-50 mt-0">
             Salvar
           </button>
         </div>
@@ -93,65 +141,49 @@ require_once "sessao.php";
   <script src="menu.js"></script>
 
   <script>
-    document.addEventListener("DOMContentLoaded", function() {
-      const animais = JSON.parse(localStorage.getItem("animais")) || [];
-      const vacinas = JSON.parse(localStorage.getItem("vacinas")) || [];
-      const medicamentos = JSON.parse(localStorage.getItem("medicamentos")) || [];
+    document.getElementById("aplicacaoForm").addEventListener("submit", async function(e) {
+      e.preventDefault();
 
-      // Populate animal dropdown
-      const animalSelect = document.getElementById("aplAnimal");
-      animalSelect.innerHTML = `<option value="">Selecione o animal ou lote...</option>`;
-      animais.forEach(a => {
-        animalSelect.innerHTML += `<option value="${a.id}">${a.nome} (${a.numero}) - ${a.lote}</option>`;
-      });
+      const btn = document.getElementById("btnSalvar");
+      const alertDiv = document.getElementById("formAlert");
+      btn.disabled = true;
+      btn.innerHTML = 'Salvando...';
+      alertDiv.classList.add('d-none');
 
-      // Populate vaccine / medicine dropdown
-      const itemSelect = document.getElementById("aplItem");
-      itemSelect.innerHTML = `<option value="">Selecione a vacina ou medicamento...</option>`;
-      
-      itemSelect.innerHTML += `<optgroup label="Vacinas">`;
-      vacinas.forEach(v => {
-        itemSelect.innerHTML += `<option value="Vacina|${v.nome}|${v.lote}">${v.nome} (Lote: ${v.lote})</option>`;
-      });
-      itemSelect.innerHTML += `</optgroup>`;
+      const data = {
+        id_animal: document.getElementById("aplAnimal").value,
+        id_produto: document.getElementById("aplItem").value,
+        tipo: document.getElementById("aplTipo").value,
+        data_aplicacao: document.getElementById("aplData").value,
+        observacoes: document.getElementById("aplObs").value
+      };
 
-      itemSelect.innerHTML += `<optgroup label="Medicamentos">`;
-      medicamentos.forEach(m => {
-        itemSelect.innerHTML += `<option value="Medicamento|${m.nome}|${m.lote}">${m.nome} (Lote: ${m.lote})</option>`;
-      });
-      itemSelect.innerHTML += `</optgroup>`;
+      try {
+        const response = await fetch('aplicacao_action.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        const result = await response.json();
 
-      // Submit logic
-      document.getElementById("aplicacaoForm").addEventListener("submit", function(e) {
-        e.preventDefault();
-
-        const selectedItem = document.getElementById("aplItem").value.split("|");
-        const itemType = selectedItem[0];
-        const itemName = selectedItem[1];
-        const itemLote = selectedItem[2];
-
-        const novaAplicacao = {
-          id: Date.now(),
-          animalId: parseInt(document.getElementById("aplAnimal").value),
-          itemNome: itemName,
-          tipo: itemType,
-          dose: document.getElementById("aplTipo").value, // We map the "Tipo" field to the dose/type field
-          data: document.getElementById("aplData").value,
-          status: "Concluído", // Newly registered applications are marked as completed
-          tecnico: "Julia Silva",
-          lote: itemLote,
-          obs: document.getElementById("aplObs").value
-        };
-
-        const aplicacoes = JSON.parse(localStorage.getItem("aplicacoes")) || [];
-        aplicacoes.push(novaAplicacao);
-        localStorage.setItem("aplicacoes", JSON.stringify(aplicacoes));
-
-        alert("Aplicação registrada com sucesso!");
-        window.location.href = "Lista de Vacinas.php";
-      });
+        if (result.success) {
+          alert("Aplicação registrada com sucesso! O estoque foi atualizado.");
+          window.location.href = "historico_de_vacinas.php";
+        } else {
+          alertDiv.className = 'alert alert-danger';
+          alertDiv.textContent = result.message;
+          alertDiv.classList.remove('d-none');
+          btn.disabled = false;
+          btn.innerHTML = 'Salvar';
+        }
+      } catch (error) {
+        alertDiv.className = 'alert alert-danger';
+        alertDiv.textContent = 'Erro de conexão com o servidor.';
+        alertDiv.classList.remove('d-none');
+        btn.disabled = false;
+        btn.innerHTML = 'Salvar';
+      }
     });
   </script>
 </body>
-
 </html>
