@@ -1,5 +1,37 @@
 <?php
 require_once "sessao.php";
+require_once "../Banco/conexao.php";
+
+$animalId = isset($_GET['id']) ? intval($_GET['id']) : 0;
+
+// Fetch animal details
+$animal = null;
+if ($animalId > 0) {
+    $sql = "SELECT a.*, l.codigo_lote 
+            FROM animais a 
+            LEFT JOIN lotes l ON a.id_lote = l.id_lote 
+            WHERE a.id_animal = $animalId";
+    $res = $conn->query($sql);
+    if ($res && $res->num_rows > 0) {
+        $animal = $res->fetch_assoc();
+    }
+}
+
+// Fetch vaccine history
+$aplicacoes = [];
+if ($animalId > 0) {
+    $sqlApls = "SELECT ap.*, vm.nome AS produto_nome, vm.tipo AS produto_tipo 
+                FROM aplicacoes ap
+                LEFT JOIN vacinas_medicamentos vm ON ap.id_vacina_medicamento = vm.id
+                WHERE ap.id_animal = $animalId
+                ORDER BY ap.data_aplicacao DESC";
+    $resApls = $conn->query($sqlApls);
+    if ($resApls) {
+        while ($r = $resApls->fetch_assoc()) {
+            $aplicacoes[] = $r;
+        }
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="pt-br">
@@ -26,33 +58,48 @@ require_once "sessao.php";
 
 <body>
 
-  <div class="topo-pagina d-none d-md-flex">
+  <div class="topo-pagina">
     <div>
       <h2 class="titulo-pagina">Ficha do Animal</h2>
       <p class="subtitulo">Ficha cadastral e prontuário vacinal do animal</p>
     </div>
   </div>
 
+  <?php if (!$animal): ?>
+    <div class="alert alert-warning">
+      <i class="bi bi-exclamation-triangle-fill me-2"></i> Animal não encontrado ou ID inválido.
+      <br><br>
+      <a href="Lista de animal.php" class="btn btn-primary rounded-pill px-4">Voltar à Lista</a>
+    </div>
+  <?php else: ?>
   <div class="row">
     <!-- Left Column: Animal Card details -->
     <div class="col-12 col-lg-8">
       <div class="animal-profile-card">
         <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
-          <h3 id="profileNome">Mimosa</h3>
-          <span class="badge bg-white text-success px-3 py-2 rounded-pill fs-6 fw-bold" id="profileNumero">001</span>
+          <h3 id="profileNome"><?= htmlspecialchars($animal['nome_animal']) ?></h3>
+          <span class="badge bg-white text-success px-3 py-2 rounded-pill fs-6 fw-bold" id="profileNumero"><?= htmlspecialchars($animal['numero_brinco'] ?? 'S/N') ?></span>
         </div>
         <div class="animal-profile-details">
           <div class="animal-profile-text">
-            <p><strong>Espécie:</strong> <span id="profileEspecie">Bovino</span></p>
-            <p><strong>Raça:</strong> <span id="profileRaca">Holandesa</span></p>
-            <p><strong>Sexo:</strong> <span id="profileSexo">Fêmea</span></p>
-            <p><strong>Data de Nascimento:</strong> <span id="profileNascimento">27/01/2026</span></p>
-            <p><strong>Lote:</strong> <span id="profileLote">LOTE 04C-01</span></p>
-            <p><strong>Pai:</strong> <span id="profilePai">Touro 1234</span></p>
-            <p><strong>Mãe:</strong> <span id="profileMae">Vaca 5823</span></p>
+            <p><strong>Espécie:</strong> <span><?= htmlspecialchars($animal['especie']) ?></span></p>
+            <p><strong>Raça:</strong> <span><?= htmlspecialchars($animal['raca'] ?? 'Não especificada') ?></span></p>
+            <p><strong>Sexo:</strong> <span><?= htmlspecialchars($animal['sexo']) ?></span></p>
+            <p><strong>Data de Nascimento:</strong> <span>
+              <?= $animal['data_nascimento'] ? date('d/m/Y', strtotime($animal['data_nascimento'])) : 'Não cadastrada' ?>
+            </span></p>
+            <p><strong>Lote:</strong> <span><?= htmlspecialchars($animal['codigo_lote'] ?? 'Sem Lote') ?></span></p>
+            <p><strong>Pai:</strong> <span><?= htmlspecialchars($animal['pai'] ?? 'Não informado') ?></span></p>
+            <p><strong>Mãe:</strong> <span><?= htmlspecialchars($animal['mae'] ?? 'Não informada') ?></span></p>
           </div>
           <div>
-            <img src="https://images.unsplash.com/photo-1570042225831-d98fa7577f1e?q=80&w=250" alt="Animal Photo" class="animal-profile-img shadow-sm" id="profileFoto">
+            <?php
+              $imgUrl = "https://images.unsplash.com/photo-1570042225831-d98fa7577f1e?q=80&w=250"; // Bovino default
+              if (stripos($animal['especie'], 'capri') !== false || stripos($animal['especie'], 'bode') !== false || stripos($animal['especie'], 'cabra') !== false) {
+                $imgUrl = "https://images.unsplash.com/photo-1524388680868-377a2e6bbb1c?q=80&w=250"; // Capri default
+              }
+            ?>
+            <img src="<?= $imgUrl ?>" alt="Animal Photo" class="animal-profile-img shadow-sm" id="profileFoto">
           </div>
         </div>
       </div>
@@ -76,7 +123,41 @@ require_once "sessao.php";
                 </tr>
               </thead>
               <tbody id="historicoTabela">
-                <!-- Rendered dynamically -->
+                <?php if (empty($aplicacoes)): ?>
+                  <tr>
+                    <td colspan="5" class="text-center py-4 text-muted">
+                      Nenhuma vacina ou medicamento aplicado.
+                    </td>
+                  </tr>
+                <?php else: ?>
+                  <?php foreach ($aplicacoes as $apl): ?>
+                    <?php
+                      $statusClass = "success";
+                      $statusText = "Aplicado";
+                      if ($apl['status_aplicacao'] === 'Atrasada') {
+                          $statusClass = "danger";
+                          $statusText = "Atrasada";
+                      } else if ($apl['status_aplicacao'] === 'Pendente') {
+                          $statusClass = "warning";
+                          $statusText = "Pendente";
+                      }
+                    ?>
+                    <tr>
+                      <td class="ps-3 fw-semibold">
+                        <?= htmlspecialchars($apl['produto_nome'] ?? 'Produto Removido') ?>
+                      </td>
+                      <td><?= htmlspecialchars($apl['dose'] ?? 'Dose única') ?></td>
+                      <td><?= date('d/m/Y', strtotime($apl['data_aplicacao'])) ?></td>
+                      <td><?= htmlspecialchars($apl['tecnico'] ?? 'Não informado') ?></td>
+                      <td class="pe-3 text-center">
+                        <span class="badge-status <?= $statusClass ?>">
+                          <i class="bi <?= $statusClass === 'success' ? 'bi-check-circle-fill' : ($statusClass === 'warning' ? 'bi-exclamation-circle-fill' : 'bi-x-circle-fill') ?> me-1"></i>
+                          <?= $statusText ?>
+                        </span>
+                      </td>
+                    </tr>
+                  <?php endforeach; ?>
+                <?php endif; ?>
               </tbody>
             </table>
           </div>
@@ -87,7 +168,7 @@ require_once "sessao.php";
     <!-- Right Column: Quick Stats, Shortcuts, Status Legends -->
     <div class="col-12 col-lg-4">
       <div class="d-grid gap-3 mb-4">
-        <a href="Registro de Aplicação.php" id="btnNovaVacina" class="btn btn-success btn-lg rounded-pill py-3 d-flex align-items-center justify-content-center gap-2 shadow-sm">
+        <a href="Registro de Aplicação.php?preselect=<?= $animal['id_animal'] ?>" class="btn btn-success btn-lg rounded-pill py-3 d-flex align-items-center justify-content-center gap-2 shadow-sm">
           <i class="bi bi-plus-circle-fill"></i> + VACINA
         </a>
         <a href="Lista de animal.php" class="btn btn-outline-secondary btn-lg rounded-pill py-3 d-flex align-items-center justify-content-center gap-2">
@@ -120,106 +201,12 @@ require_once "sessao.php";
       </div>
     </div>
   </div>
+  <?php endif; ?>
 
   <!-- Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <!-- Common Menu System -->
   <script src="menu.js"></script>
-
-  <script>
-    document.addEventListener("DOMContentLoaded", function () {
-      // Get URL query params
-      const params = new URLSearchParams(window.location.search);
-      const animalId = parseInt(params.get("id")) || 1; // Default to Mimosa (1)
-
-      const animais = JSON.parse(localStorage.getItem("animais")) || [];
-      const aplicacoes = JSON.parse(localStorage.getItem("aplicacoes")) || [];
-
-      // Find selected animal
-      const animal = animais.find(a => a.id === animalId);
-
-      if (animal) {
-        // Update DOM
-        document.getElementById("profileNome").innerText = animal.nome;
-        document.getElementById("profileNumero").innerText = animal.numero;
-        document.getElementById("profileEspecie").innerText = animal.especie || "Bovino";
-        document.getElementById("profileRaca").innerText = animal.raca || "Nelore";
-        document.getElementById("profileSexo").innerText = animal.sexo;
-        
-        // Format birth date nicely
-        if (animal.dataNascimento) {
-          const parts = animal.dataNascimento.split("-");
-          if(parts.length === 3) {
-            document.getElementById("profileNascimento").innerText = `${parts[2]}/${parts[1]}/${parts[0]}`;
-          } else {
-            document.getElementById("profileNascimento").innerText = animal.dataNascimento;
-          }
-        } else {
-          document.getElementById("profileNascimento").innerText = "27/01/2026";
-        }
-        
-        document.getElementById("profileLote").innerText = animal.lote || "Sem Lote";
-        document.getElementById("profilePai").innerText = animal.pai || "Não informado";
-        document.getElementById("profileMae").innerText = animal.mae || "Não informada";
-
-        // Dynamic animal image (different image for goats/cows)
-        const photoEl = document.getElementById("profileFoto");
-        if (animal.especie && animal.especie.toLowerCase().includes("capri")) {
-          photoEl.src = "https://images.unsplash.com/photo-1524388680868-377a2e6bbb1c?q=80&w=250"; // Goat
-        } else {
-          photoEl.src = "https://images.unsplash.com/photo-1570042225831-d98fa7577f1e?q=80&w=250"; // Cow
-        }
-
-        // Setup the direct link on "+ Vacina" button to pre-select this animal
-        const btnNovaVacina = document.getElementById("btnNovaVacina");
-        btnNovaVacina.href = `Registro de Aplicação.php?preselect=${animal.id}`;
-      }
-
-      // Filter applications for this animal
-      const animalAplicacoes = aplicacoes.filter(a => a.animalId === animalId);
-      const tableBody = document.getElementById("historicoTabela");
-      tableBody.innerHTML = "";
-
-      if (animalAplicacoes.length === 0) {
-        tableBody.innerHTML = `
-          <tr>
-            <td colspan="5" class="text-center py-4 text-muted">
-              Nenhuma vacina ou medicamento aplicado.
-            </td>
-          </tr>
-        `;
-        return;
-      }
-
-      animalAplicacoes.forEach(a => {
-        let statusBadge = "";
-        if (a.status === "Concluído") {
-          statusBadge = `<span class="badge-status success"><i class="bi bi-check-circle-fill"></i> Aplicado</span>`;
-        } else if (a.status === "Pendente") {
-          statusBadge = `<span class="badge-status warning"><i class="bi bi-exclamation-circle-fill"></i> Pendente</span>`;
-        } else {
-          statusBadge = `<span class="badge-status danger"><i class="bi bi-x-circle-fill"></i> Atrasada</span>`;
-        }
-
-        // Format date
-        let formattedDate = a.data;
-        const parts = a.data.split("-");
-        if (parts.length === 3) {
-          formattedDate = `${parts[2]}/${parts[1]}/${parts[0]}`;
-        }
-
-        tableBody.innerHTML += `
-          <tr>
-            <td class="ps-3 fw-semibold">${a.itemNome} <small class="text-muted d-block">Lote: ${a.lote || '---'}</small></td>
-            <td>${a.dose || a.tipo || 'Dose única'}</td>
-            <td>${formattedDate}</td>
-            <td>${a.tecnico || 'Julia Silva'}</td>
-            <td class="pe-3 text-center">${statusBadge}</td>
-          </tr>
-        `;
-      });
-    });
-  </script>
 </body>
 
 </html>

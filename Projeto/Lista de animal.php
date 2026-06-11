@@ -54,10 +54,8 @@ if ($resLotes) {
   <!-- BUSCA -->
   <div class="card card-premium mb-4">
     <div class="card-body">
-      <div class="input-group input-icon-wrapper">
-        <span class="input-group-text bg-transparent border-0 ps-3">
-          <i class="bi bi-search"></i>
-        </span>
+      <div class="input-icon-wrapper">
+        <i class="bi bi-search"></i>
         <input type="text" id="pesquisa" class="form-control form-control-custom" placeholder="Pesquisar animal por nome, número ou raça..." onkeyup="filtrarAnimais()" />
       </div>
     </div>
@@ -85,8 +83,9 @@ if ($resLotes) {
             <input type="text" id="editNome" class="form-control" />
           </div>
           <div class="mb-3">
-            <label class="form-label fw-semibold">Número</label>
-            <input type="text" id="editNumero" class="form-control" />
+            <label class="form-label fw-semibold">Número do Brinco</label>
+            <input type="text" id="editNumero" class="form-control" readonly disabled style="background-color: #e9ecef; color: #6c757d;" />
+            <small class="text-muted"><i class="bi bi-info-circle"></i> Gerado automaticamente</small>
           </div>
           <div class="mb-3">
             <label class="form-label fw-semibold">Espécie</label>
@@ -254,7 +253,6 @@ if ($resLotes) {
         action: 'edit',
         id_animal: document.getElementById("editAnimalId").value,
         nome: document.getElementById("editNome").value,
-        numero: document.getElementById("editNumero").value,
         especie: document.getElementById("editEspecie").value,
         raca: document.getElementById("editRaca").value,
         id_lote: document.getElementById("editLote").value,

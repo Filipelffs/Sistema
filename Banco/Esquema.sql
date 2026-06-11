@@ -1,23 +1,35 @@
-CREATE DATABASE vacinacao_animal;
+CREATE DATABASE IF NOT EXISTS vacinacao_animal CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE vacinacao_animal;
 
 -- =========================
 -- TABELA USUÁRIOS
 -- =========================
-CREATE TABLE usuarios (
+CREATE TABLE IF NOT EXISTS usuarios (
     id_usuario INT PRIMARY KEY AUTO_INCREMENT,
     nome VARCHAR(100) NOT NULL,
     email VARCHAR(150) UNIQUE NOT NULL,
     senha VARCHAR(255) NOT NULL,
     telefone VARCHAR(20),
     tipo_usuario ENUM('admin','veterinario') DEFAULT 'veterinario',
+    foto VARCHAR(255) DEFAULT NULL,
+    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- =========================
+-- TABELA LOTES
+-- =========================
+CREATE TABLE IF NOT EXISTS lotes (
+    id_lote INT PRIMARY KEY AUTO_INCREMENT,
+    codigo_lote VARCHAR(50) UNIQUE NOT NULL,
+    tipo_animal VARCHAR(50),
+    quantidade_animais INT,
     criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- =========================
 -- TABELA ANIMAIS
 -- =========================
-CREATE TABLE animais (
+CREATE TABLE IF NOT EXISTS animais (
     id_animal INT PRIMARY KEY AUTO_INCREMENT,
     nome_animal VARCHAR(100) NOT NULL,
     numero_brinco VARCHAR(50) UNIQUE,
@@ -28,81 +40,45 @@ CREATE TABLE animais (
     pai VARCHAR(100),
     mae VARCHAR(100),
     peso DECIMAL(10,2),
-    status_animal ENUM('Saudavel','Doente','Tratamento') DEFAULT 'Saudavel',
-    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- =========================
--- TABELA VACINAS
--- =========================
-CREATE TABLE vacinas (
-    id_vacina INT PRIMARY KEY AUTO_INCREMENT,
-    nome_vacina VARCHAR(100) NOT NULL,
-    tipo_vacina VARCHAR(100),
-    fabricante VARCHAR(100),
-    intervalo_doses INT,
-    observacoes TEXT,
-    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- =========================
--- TABELA MEDICAMENTOS
--- =========================
-CREATE TABLE medicamentos (
-    id_medicamento INT PRIMARY KEY AUTO_INCREMENT,
-    nome_medicamento VARCHAR(100) NOT NULL,
-    tipo VARCHAR(100),
-    principio_ativo VARCHAR(100),
-    data_fabricacao DATE,
-    intervalo_uso INT,
-    lote VARCHAR(50),
-    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- =========================
--- TABELA LOTES
--- =========================
-CREATE TABLE lotes (
-    id_lote INT PRIMARY KEY AUTO_INCREMENT,
-    codigo_lote VARCHAR(50) UNIQUE NOT NULL,
-    tipo_animal VARCHAR(50),
-    quantidade_animais INT,
-    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- =========================
--- RELAÇÃO ANIMAL x LOTE
--- =========================
-CREATE TABLE animal_lote (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    id_animal INT,
     id_lote INT,
-
-    FOREIGN KEY (id_animal) REFERENCES animais(id_animal),
-    FOREIGN KEY (id_lote) REFERENCES lotes(id_lote)
+    status_animal ENUM('Saudavel','Doente','Tratamento') DEFAULT 'Saudavel',
+    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_lote) REFERENCES lotes(id_lote) ON DELETE SET NULL
 );
 
 -- =========================
--- TABELA APLICAÇÕES
+-- TABELA VACINAS E MEDICAMENTOS (Unificada)
 -- =========================
-CREATE TABLE aplicacoes (
+CREATE TABLE IF NOT EXISTS vacinas_medicamentos (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    nome VARCHAR(100) NOT NULL,
+    tipo ENUM('vacina', 'medicamento') NOT NULL,
+    quantidade INT DEFAULT 0,
+    data_fabricacao DATE,
+    data_vencimento DATE,
+    descricao TEXT,
+    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS aplicacoes (
     id_aplicacao INT PRIMARY KEY AUTO_INCREMENT,
     id_animal INT,
-    id_vacina INT,
-    id_medicamento INT,
+    id_vacina_medicamento INT,
+    quantidade_aplicada INT DEFAULT 1,
     data_aplicacao DATE,
     proxima_aplicacao DATE,
+    dose VARCHAR(100) DEFAULT NULL,
+    tecnico VARCHAR(100) DEFAULT NULL,
+    status_aplicacao ENUM('Concluído', 'Pendente', 'Atrasada') DEFAULT 'Concluído',
     observacoes TEXT,
-
-    FOREIGN KEY (id_animal) REFERENCES animais(id_animal),
-    FOREIGN KEY (id_vacina) REFERENCES vacinas(id_vacina),
-    FOREIGN KEY (id_medicamento) REFERENCES medicamentos(id_medicamento)
+    FOREIGN KEY (id_animal) REFERENCES animais(id_animal) ON DELETE CASCADE,
+    FOREIGN KEY (id_vacina_medicamento) REFERENCES vacinas_medicamentos(id) ON DELETE SET NULL
 );
 
 -- =========================
 -- TABELA NOTIFICAÇÕES
 -- =========================
-CREATE TABLE notificacoes (
+CREATE TABLE IF NOT EXISTS notificacoes (
     id_notificacao INT PRIMARY KEY AUTO_INCREMENT,
     titulo VARCHAR(150),
     mensagem TEXT,
@@ -113,7 +89,7 @@ CREATE TABLE notificacoes (
 -- =========================
 -- CONFIGURAÇÕES
 -- =========================
-CREATE TABLE configuracoes (
+CREATE TABLE IF NOT EXISTS configuracoes (
     id_config INT PRIMARY KEY AUTO_INCREMENT,
     tema_escuro BOOLEAN DEFAULT FALSE,
     notificacoes BOOLEAN DEFAULT TRUE,

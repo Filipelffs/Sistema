@@ -54,16 +54,17 @@ if ($resLotes) {
       <form id="animalForm">
         <div id="formAlert" class="alert d-none"></div>
 
+        <!-- Número do brinco (Automático) -->
+        <div class="form-group-custom mb-3">
+          <label>Número do Brinco</label>
+          <input type="text" class="form-control-custom-noicon" value="Gerado automaticamente ao salvar" readonly disabled style="background-color: #dee2e6; color: #6c757d; font-style: italic;">
+          <small class="text-muted"><i class="bi bi-info-circle"></i> O número do brinco é gerado automaticamente pelo sistema (ex: BRI-001)</small>
+        </div>
+
         <!-- Nome do Animal -->
         <div class="form-group-custom mb-3">
           <label>Nome do Animal</label>
           <input type="text" id="aniNome" class="form-control-custom-noicon" placeholder="Ex: Mimosa, Paula..." required>
-        </div>
-
-        <!-- Número do brinco -->
-        <div class="form-group-custom mb-3">
-          <label>Número do brinco</label>
-          <input type="text" id="aniNumero" class="form-control-custom-noicon" placeholder="Ex: 001, 1003..." required>
         </div>
 
         <!-- Espécie -->
@@ -174,10 +175,9 @@ if ($resLotes) {
       const data = {
         action: 'create',
         nome: document.getElementById("aniNome").value,
-        numero: document.getElementById("aniNumero").value,
         especie: document.getElementById("aniEspecie").value,
         raca: document.getElementById("aniRaca").value,
-        id_lote: document.getElementById("aniLote").value, // Vindo do Select
+        id_lote: document.getElementById("aniLote").value,
         sexo: document.getElementById("aniSexo").value,
         data_nascimento: document.getElementById("aniDataNasc").value,
         pai: document.getElementById("aniPai").value,
@@ -194,7 +194,7 @@ if ($resLotes) {
         const result = await response.json();
 
         if (result.success) {
-          alert("Animal cadastrado com sucesso!");
+          alert(result.message);
           window.location.href = "Lista de animal.php";
         } else {
           alertDiv.className = 'alert alert-danger';

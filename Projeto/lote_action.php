@@ -34,7 +34,7 @@ if ($action === 'list') {
 }
 
 // Below actions require ADMIN permission
-if ($action === 'create' || $action === 'edit') {
+if ($action === 'create' || $action === 'edit' || $action === 'delete') {
     if (!isset($_SESSION['usuario_tipo']) || $_SESSION['usuario_tipo'] !== 'admin') {
         echo json_encode(['success' => false, 'message' => 'Permissão negada. Apenas administradores podem realizar esta ação.']);
         exit;
@@ -74,6 +74,16 @@ if ($action === 'create' || $action === 'edit') {
             echo json_encode(['success' => true, 'message' => 'Lote atualizado com sucesso!']);
         } else {
             echo json_encode(['success' => false, 'message' => 'Erro ao atualizar lote: ' . $conn->error]);
+        }
+    }
+
+    if ($action === 'delete') {
+        $id_lote = intval($input['id_lote']);
+        $sql = "DELETE FROM lotes WHERE id_lote = $id_lote";
+        if ($conn->query($sql)) {
+            echo json_encode(['success' => true, 'message' => 'Lote excluído com sucesso!']);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Erro ao excluir lote: ' . $conn->error]);
         }
     }
     exit;

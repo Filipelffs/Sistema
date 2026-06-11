@@ -143,9 +143,12 @@ $isAdmin = ($_SESSION['usuario_tipo'] === 'admin');
           let editBtn = '';
           if (isAdmin) {
             editBtn = `
-              <div class="text-center mt-3">
-                <button class="btn btn-outline-success rounded-pill px-4 btn-sm" onclick="abrirModalEditarLote(${lote.id_lote}, '${lote.codigo_lote}')">
-                  <i class="bi bi-pencil-fill me-2"></i> Editar Lote
+              <div class="d-flex justify-content-center gap-2 mt-3">
+                <button class="btn btn-outline-success rounded-pill px-3 btn-sm" onclick="abrirModalEditarLote(${lote.id_lote}, '${lote.codigo_lote}')">
+                  <i class="bi bi-pencil-fill me-1"></i> Editar
+                </button>
+                <button class="btn btn-outline-danger rounded-pill px-3 btn-sm" onclick="excluirLote(${lote.id_lote}, '${lote.codigo_lote}')">
+                  <i class="bi bi-trash-fill me-1"></i> Excluir
                 </button>
               </div>
             `;
@@ -248,6 +251,25 @@ $isAdmin = ($_SESSION['usuario_tipo'] === 'admin');
       } finally {
         btn.disabled = false;
         btn.innerText = "Salvar";
+      }
+    }
+    async function excluirLote(id, nome) {
+      if (confirm(`Tem certeza que deseja excluir o lote "${nome}"? Os animais deste lote ficarão "sem lote".`)) {
+        try {
+          const response = await fetch('lote_action.php?action=delete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id_lote: id })
+          });
+          const result = await response.json();
+          if (result.success) {
+            carregarLotes();
+          } else {
+            alert(result.message);
+          }
+        } catch (error) {
+          alert("Erro na comunicação com o servidor.");
+        }
       }
     }
   </script>

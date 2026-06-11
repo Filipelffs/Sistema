@@ -1,5 +1,28 @@
 <?php
 require_once "sessao.php";
+require_once "../Banco/conexao.php";
+
+$isAdmin = ($_SESSION['usuario_tipo'] === 'admin');
+
+// Fetch lotes for filter dropdown
+$sqlLotes = "SELECT id_lote, codigo_lote FROM lotes ORDER BY codigo_lote ASC";
+$resLotes = $conn->query($sqlLotes);
+$lotesFilter = [];
+if ($resLotes) {
+    while ($r = $resLotes->fetch_assoc()) {
+        $lotesFilter[] = $r;
+    }
+}
+
+// Fetch distinct breeds for filter
+$sqlRacas = "SELECT DISTINCT raca FROM animais WHERE raca IS NOT NULL AND raca != '' ORDER BY raca ASC";
+$resRacas = $conn->query($sqlRacas);
+$racasFilter = [];
+if ($resRacas) {
+    while ($r = $resRacas->fetch_assoc()) {
+        $racasFilter[] = $r['raca'];
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="pt-br">
@@ -57,19 +80,18 @@ require_once "sessao.php";
             <label class="form-label small fw-semibold">Filtrar por Lote</label>
             <select id="filtroLote" class="form-select" onchange="aplicarFiltros()">
               <option value="">Todos</option>
-              <option value="LOTE 1">LOTE 1</option>
-              <option value="LOTE 2">LOTE 2</option>
-              <option value="LOTE 3">LOTE 3</option>
+              <?php foreach($lotesFilter as $l): ?>
+                <option value="<?= $l['id_lote'] ?>"><?= htmlspecialchars($l['codigo_lote']) ?></option>
+              <?php endforeach; ?>
             </select>
           </div>
           <div class="col-6 col-md-4">
             <label class="form-label small fw-semibold">Filtrar por Raça</label>
             <select id="filtroRaca" class="form-select" onchange="aplicarFiltros()">
               <option value="">Todas</option>
-              <option value="Holandesa">Holandesa</option>
-              <option value="Gir">Gir</option>
-              <option value="Anglonubiana">Anglonubiana</option>
-              <option value="Angus">Angus</option>
+              <?php foreach($racasFilter as $raca): ?>
+                <option value="<?= htmlspecialchars($raca) ?>"><?= htmlspecialchars($raca) ?></option>
+              <?php endforeach; ?>
             </select>
           </div>
           <div class="col-12 col-md-4 d-flex align-items-end">
@@ -80,9 +102,11 @@ require_once "sessao.php";
     </div>
   </div>
 
-  <!-- Animal Cards List (Mockup Banner Style) -->
+  <!-- Animal Cards List -->
   <div class="row g-4" id="moduleAnimaisList">
-    <!-- Rendered dynamically -->
+    <div class="col-12 text-center py-5">
+      <div class="spinner-border text-success" role="status"></div>
+    </div>
   </div>
 
   <!-- Bootstrap JS -->
@@ -91,11 +115,24 @@ require_once "sessao.php";
   <script src="menu.js"></script>
 
   <script>
-    function getAnimais() {
-      return JSON.parse(localStorage.getItem("animais")) || [];
+    let animaisCompleta = [];
+
+    async function carregarAnimais() {
+      try {
+        const response = await fetch('animal_action.php?action=list');
+        const result = await response.json();
+        if (result.success) {
+          animaisCompleta = result.data;
+          renderizarModuleAnimais(animaisCompleta);
+        } else {
+          document.getElementById("moduleAnimaisList").innerHTML = `<div class="col-12 alert alert-danger">${result.message}</div>`;
+        }
+      } catch (error) {
+        document.getElementById("moduleAnimaisList").innerHTML = `<div class="col-12 alert alert-danger">Erro ao carregar animais do banco de dados.</div>`;
+      }
     }
 
-    function renderizarModuleAnimais(lista = getAnimais()) {
+    function renderizarModuleAnimais(lista) {
       const container = document.getElementById("moduleAnimaisList");
       container.innerHTML = "";
 
@@ -110,25 +147,35 @@ require_once "sessao.php";
       }
 
       lista.forEach(animal => {
+        // Choose image based on species
+        let imgUrl = "https://images.unsplash.com/photo-1570042225831-d98fa7577f1e?q=80&w=150";
+        if (animal.especie && animal.especie.toLowerCase().includes("capri")) {
+          imgUrl = "https://images.unsplash.com/photo-1524388680868-377a2e6bbb1c?q=80&w=150";
+        }
+
         container.innerHTML += `
           <div class="col-12 col-md-6 col-xl-4">
             <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-3">
               <!-- Custom Green Banner Header -->
               <div class="bg-success text-white px-3 py-2 fw-semibold d-flex justify-content-between align-items-center">
-                <span>${animal.nome}</span>
-                <span class="badge bg-white text-success rounded-pill">${animal.numero}</span>
+                <span>${animal.nome_animal}</span>
+                <span class="badge bg-white text-success rounded-pill">${animal.numero_brinco || 'S/N'}</span>
               </div>
               <div class="card-body bg-white p-3">
-                <ul class="list-unstyled mb-0 small">
-                  <li class="py-1"><strong>Raça:</strong> ${animal.raca || 'Holandesa'}</li>
-                  <li class="py-1"><strong>Sexo:</strong> ${animal.sexo}</li>
-                  <li class="py-1"><strong>Mãe:</strong> ${animal.mae || 'Vaca 5823'}</li>
-                  <li class="py-1"><strong>Pai:</strong> ${animal.pai || 'Touro 1234'}</li>
-                </ul>
+                <div class="d-flex gap-3">
+                  <img src="${imgUrl}" class="rounded-circle border" width="55" height="55" style="object-fit: cover; flex-shrink: 0;">
+                  <ul class="list-unstyled mb-0 small">
+                    <li class="py-1"><strong>Espécie:</strong> ${animal.especie || 'N/A'}</li>
+                    <li class="py-1"><strong>Raça:</strong> ${animal.raca || 'Não especificada'}</li>
+                    <li class="py-1"><strong>Sexo:</strong> ${animal.sexo}</li>
+                    <li class="py-1"><strong>Mãe:</strong> ${animal.mae || 'Não informada'}</li>
+                    <li class="py-1"><strong>Pai:</strong> ${animal.pai || 'Não informado'}</li>
+                  </ul>
+                </div>
               </div>
-              <div class="bg-light px-3 py-2 border-top d-flex justify-content-between">
-                <small class="text-muted">${animal.lote || 'LOTE 1'}</small>
-                <a href="Ficha de animal.php?id=${animal.id}" class="btn btn-sm btn-success rounded-pill px-3 py-0 fs-7">Ficha</a>
+              <div class="bg-light px-3 py-2 border-top d-flex justify-content-between align-items-center">
+                <small class="text-muted"><i class="bi bi-tag-fill me-1"></i>${animal.codigo_lote || 'Sem Lote'}</small>
+                <a href="Ficha de animal.php?id=${animal.id_animal}" class="btn btn-sm btn-success rounded-pill px-3 py-0 fs-7">Ficha</a>
               </div>
             </div>
           </div>
@@ -137,15 +184,15 @@ require_once "sessao.php";
     }
 
     function aplicarFiltros() {
-      const lote = document.getElementById("filtroLote").value;
+      const loteId = document.getElementById("filtroLote").value;
       const raca = document.getElementById("filtroRaca").value;
-      let animais = getAnimais();
+      let animais = [...animaisCompleta];
 
-      if (lote) {
-        animais = animais.filter(a => a.lote === lote);
+      if (loteId) {
+        animais = animais.filter(a => String(a.id_lote) === loteId);
       }
       if (raca) {
-        animais = animais.filter(a => a.raca.includes(raca));
+        animais = animais.filter(a => a.raca && a.raca.includes(raca));
       }
 
       renderizarModuleAnimais(animais);
@@ -154,12 +201,10 @@ require_once "sessao.php";
     function limparFiltros() {
       document.getElementById("filtroLote").value = "";
       document.getElementById("filtroRaca").value = "";
-      renderizarModuleAnimais();
+      renderizarModuleAnimais(animaisCompleta);
     }
 
-    window.addEventListener("load", () => {
-      renderizarModuleAnimais();
-    });
+    window.addEventListener("load", carregarAnimais);
   </script>
 </body>
 

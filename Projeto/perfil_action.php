@@ -18,6 +18,7 @@ if (isset($input['foto'])) {
     $sql = "UPDATE usuarios SET foto = '$foto' WHERE id_usuario = $id";
     $conn->query($sql);
     $_SESSION['usuario_foto'] = $foto;
+    setcookie('usuario_foto', $foto, time() + (86400 * 30), "/");
 }
 
 if ($isAdmin && isset($input['nome']) && isset($input['email'])) {
@@ -27,6 +28,7 @@ if ($isAdmin && isset($input['nome']) && isset($input['email'])) {
     if ($conn->query($sql)) {
         $_SESSION['usuario_nome'] = $nome;
         $_SESSION['usuario_email'] = $email;
+        setcookie('usuario_nome', $nome, time() + (86400 * 30), "/");
     }
 }
 

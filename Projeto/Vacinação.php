@@ -26,7 +26,7 @@ require_once "sessao.php";
 
 <body>
 
-  <div class="topo-pagina d-none d-md-flex">
+  <div class="topo-pagina">
     <div>
       <h2 class="titulo-pagina">Status de Imunização</h2>
       <p class="subtitulo">Acompanhe as aplicações concluídas, pendentes ou atrasadas de todo o rebanho</p>
@@ -55,7 +55,9 @@ require_once "sessao.php";
 
   <!-- Applications list grouped or shown individually with status indicators -->
   <div class="row g-3" id="listaVacinasStatus">
-    <!-- Rendered dynamically -->
+    <div class="col-12 text-center py-5">
+      <div class="spinner-border text-success" role="status"></div>
+    </div>
   </div>
 
   <!-- Bottom Trigger -->
@@ -71,56 +73,80 @@ require_once "sessao.php";
   <script src="menu.js"></script>
 
   <script>
-    /**
-     * Calcula o status automático de uma aplicação baseado na data.
-     * - Concluído: vacina já foi aplicada (mantém o status)
-     * - Pendente: data de aplicação é hoje ou no futuro
-     * - Atrasada: data de aplicação já passou e não foi concluída
-     */
-    function calcularStatusAutomatico(aplicacao) {
-      // Se já foi concluída/aplicada, mantém
-      if (aplicacao.status === "Concluído") {
+    let aplicacoesList = [];
+
+    function calcularStatusAutomatico(apl) {
+      if (apl.status_aplicacao === "Concluído") {
         return "Concluído";
       }
 
-      // Compara a data da aplicação com a data atual
       const hoje = new Date();
       hoje.setHours(0, 0, 0, 0);
 
-      const dataAplicacao = new Date(aplicacao.data + "T00:00:00");
+      const dataAplicacao = new Date(apl.data_aplicacao + "T00:00:00");
 
       if (dataAplicacao < hoje) {
-        return "Atrasada";   // Data já passou → atrasada
+        return "Atrasada";
       } else {
-        return "Pendente";   // Data é hoje ou futura → pendente
+        return "Pendente";
       }
     }
 
-    /**
-     * Atualiza os status de todas as aplicações no localStorage
-     * e re-renderiza a lista.
-     */
-    function atualizarStatus() {
-      const aplicacoes = JSON.parse(localStorage.getItem("aplicacoes")) || [];
-      let alterados = 0;
-
-      aplicacoes.forEach(a => {
-        const novoStatus = calcularStatusAutomatico(a);
-        if (a.status !== novoStatus) {
-          a.status = novoStatus;
-          alterados++;
+    async function carregarStatus() {
+      try {
+        const response = await fetch('aplicacao_action.php?action=list');
+        const result = await response.json();
+        if (result.success) {
+          aplicacoesList = result.data;
+          renderizarLista(aplicacoesList);
+        } else {
+          document.getElementById('listaVacinasStatus').innerHTML = `<div class="col-12 alert alert-danger">${result.message}</div>`;
         }
-      });
+      } catch (error) {
+        document.getElementById('listaVacinasStatus').innerHTML = `<div class="col-12 alert alert-danger">Erro de conexão ao carregar status.</div>`;
+      }
+    }
 
-      localStorage.setItem("aplicacoes", JSON.stringify(aplicacoes));
-      renderizarLista();
-
-      // Feedback visual no botão
+    async function atualizarStatus() {
+      let alterados = 0;
       const btn = document.getElementById("btnAtualizarStatus");
+      btn.disabled = true;
+
+      for (const apl of aplicacoesList) {
+        const novoStatus = calcularStatusAutomatico(apl);
+        if (apl.status_aplicacao !== novoStatus) {
+          try {
+            const res = await fetch('aplicacao_action.php', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                action: 'edit',
+                id_aplicacao: apl.id_aplicacao,
+                dose: apl.dose,
+                data_aplicacao: apl.data_aplicacao,
+                tecnico: apl.tecnico,
+                status: novoStatus,
+                observacoes: apl.observacoes
+              })
+            });
+            const result = await res.json();
+            if (result.success) {
+              alterados++;
+            }
+          } catch (e) {
+            console.error("Erro ao atualizar status do item " + apl.id_aplicacao);
+          }
+        }
+      }
+
+      await carregarStatus();
+
       const textoOriginal = btn.innerHTML;
       btn.innerHTML = `<i class="bi bi-check-circle-fill"></i> ${alterados} status atualizado(s)`;
       btn.classList.remove("btn-outline-success");
       btn.classList.add("btn-success", "text-white");
+      btn.disabled = false;
+
       setTimeout(() => {
         btn.innerHTML = textoOriginal;
         btn.classList.remove("btn-success", "text-white");
@@ -128,12 +154,10 @@ require_once "sessao.php";
       }, 2500);
     }
 
-    function renderizarLista() {
-      const aplicacoes = JSON.parse(localStorage.getItem("aplicacoes")) || [];
-      const animais = JSON.parse(localStorage.getItem("animais")) || [];
+    function renderizarLista(lista) {
       const container = document.getElementById("listaVacinasStatus");
 
-      if (aplicacoes.length === 0) {
+      if (lista.length === 0) {
         container.innerHTML = `
           <div class="col-12 text-center py-5">
             <i class="bi bi-clipboard-x fs-1 text-muted d-block mb-3"></i>
@@ -144,11 +168,8 @@ require_once "sessao.php";
       }
 
       container.innerHTML = "";
-      aplicacoes.forEach(a => {
-        const animal = animais.find(ani => ani.id === a.animalId) || { nome: "Paula", numero: "1003" };
-
-        // Calcula status automaticamente pela data
-        const statusAtual = calcularStatusAutomatico(a);
+      lista.forEach(apl => {
+        const statusAtual = calcularStatusAutomatico(apl);
 
         let statusClass = "success";
         let badgeText = "Concluído";
@@ -163,15 +184,13 @@ require_once "sessao.php";
           badgeIcon = "bi-exclamation-circle-fill";
         }
 
-        // Animal image
         let imgUrl = "https://images.unsplash.com/photo-1570042225831-d98fa7577f1e?q=80&w=150";
-        if (animal.especie && animal.especie.toLowerCase().includes("capri")) {
+        if (apl.especie && apl.especie.toLowerCase().includes("capri")) {
           imgUrl = "https://images.unsplash.com/photo-1524388680868-377a2e6bbb1c?q=80&w=150";
         }
 
-        // Date format
-        let formattedDate = a.data;
-        const parts = a.data.split("-");
+        let formattedDate = apl.data_aplicacao;
+        const parts = apl.data_aplicacao.split("-");
         if (parts.length === 3) {
           formattedDate = `${parts[2]}/${parts[1]}/${parts[0]}`;
         }
@@ -183,8 +202,8 @@ require_once "sessao.php";
                 <div class="d-flex align-items-center">
                   <img src="${imgUrl}" class="rounded-circle me-3 border" width="55" height="55" style="object-fit: cover;">
                   <div class="flex-grow-1">
-                    <h6 class="fw-bold mb-1">${animal.nome} <small class="text-muted">(${animal.numero})</small></h6>
-                    <small class="d-block text-muted">Item: <strong class="text-dark">${a.itemNome}</strong> | ${a.dose || '1ª dose'}</small>
+                    <h6 class="fw-bold mb-1">${apl.nome_animal || 'Sem Animal'} <small class="text-muted">(${apl.numero_brinco || '---'})</small></h6>
+                    <small class="d-block text-muted">Item: <strong class="text-dark">${apl.produto_nome || 'Produto Removido'}</strong> | ${apl.dose || '1ª dose'}</small>
                     <small class="text-muted">Data prevista: ${formattedDate}</small>
                   </div>
                   <span class="badge-status ${statusClass} px-3 py-2 fw-bold text-center" style="min-width: 100px;">
@@ -199,7 +218,7 @@ require_once "sessao.php";
     }
 
     document.addEventListener("DOMContentLoaded", function () {
-      renderizarLista();
+      carregarStatus();
     });
   </script>
 </body>
