@@ -161,10 +161,8 @@ if ($result) {
   <!-- Busca e Filtros -->
   <div class="card card-premium mb-4">
     <div class="card-body">
-      <div class="input-group input-icon-wrapper">
-        <span class="input-group-text bg-transparent border-0 ps-3">
-          <i class="bi bi-search"></i>
-        </span>
+      <div class="input-icon-wrapper">
+        <i class="bi bi-search"></i>
         <input type="text" id="pesquisaUsuario" class="form-control form-control-custom" placeholder="Pesquisar por nome ou e-mail..." onkeyup="filtrarUsuarios()" />
       </div>
     </div>

@@ -21,7 +21,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     if (empty($email) || empty($senha)) {
         $erro = "Por favor, preencha todos os campos.";
     } else {
-        $stmt = $conn->prepare("SELECT id_usuario, nome, email, senha, telefone, tipo_usuario FROM usuarios WHERE email = ?");
+        $stmt = $conn->prepare("SELECT id_usuario, nome, email, senha, telefone, tipo_usuario, foto FROM usuarios WHERE email = ?");
         $stmt->bind_param("s", $email);
         $stmt->execute();
         $result = $stmt->get_result();
@@ -35,6 +35,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 $_SESSION['usuario_email'] = $user['email'];
                 $_SESSION['usuario_tipo'] = $user['tipo_usuario'];
                 $_SESSION['usuario_telefone'] = $user['telefone'];
+                $_SESSION['usuario_foto'] = $user['foto'];
+
+                // Set cookies for frontend JS (menu.js)
+                setcookie('usuario_nome', $user['nome'], time() + (86400 * 30), "/");
+                setcookie('usuario_tipo', $user['tipo_usuario'], time() + (86400 * 30), "/");
+                setcookie('usuario_foto', $user['foto'] ?? '', time() + (86400 * 30), "/");
 
                 header("Location: Dashboard.php");
                 exit();

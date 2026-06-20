@@ -73,7 +73,7 @@ if ($resProdutos) {
           <select id="aplAnimal" class="form-select form-control-custom-noicon" required>
             <option value="">Selecione o animal...</option>
             <?php foreach($animais as $a): ?>
-              <option value="<?= $a['id_animal'] ?>">
+              <option value="<?= $a['id_animal'] ?>" <?= (isset($_GET['preselect']) && intval($_GET['preselect']) === intval($a['id_animal'])) ? 'selected' : '' ?>>
                 <?= htmlspecialchars($a['nome_animal']) ?> 
                 (<?= htmlspecialchars($a['numero_brinco']) ?>) - Lote: <?= htmlspecialchars($a['codigo_lote'] ?? 'Sem lote') ?>
               </option>

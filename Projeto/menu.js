@@ -11,6 +11,18 @@ document.addEventListener("DOMContentLoaded", function () {
   const mobileNavbar = document.createElement("div");
   mobileNavbar.className = "mobile-navbar";
 
+  function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return decodeURIComponent(parts.pop().split(';').shift());
+    return null;
+  }
+
+  const userFoto = getCookie('usuario_foto') || window.USER_SESSION?.foto || '';
+  const userNome = getCookie('usuario_nome') || window.USER_SESSION?.nome || 'Usuário';
+  const userTipo = getCookie('usuario_tipo') || window.USER_SESSION?.tipo || 'veterinario';
+  const isAdmin = userTipo === 'admin';
+
   const currentPath = decodeURIComponent(window.location.pathname.split("/").pop());
   const inVacinaFolder = window.location.pathname.includes('/vacina/');
   const prefix = inVacinaFolder ? "../" : "";
@@ -40,8 +52,7 @@ document.addEventListener("DOMContentLoaded", function () {
     <div style="width: 24px;"></div>
   `;
 
-  const userTipo = (window.USER_SESSION && window.USER_SESSION.tipo) ? window.USER_SESSION.tipo : 'veterinario';
-  const isAdmin = userTipo === 'admin';
+
 
   const sidebar = document.createElement("nav");
   sidebar.className = "menu-lateral";
@@ -50,7 +61,7 @@ document.addEventListener("DOMContentLoaded", function () {
   sidebar.innerHTML = `
     <div>
       <a class="navbar-brand" href="${prefix}Dashboard.php">
-        <img src="${prefix}img/logo2.png" alt="Logo" width="50" height="50" class="rounded-circle">
+        <img src="${prefix}img/logo2.png" alt="Logo" width="40" height="40" class="rounded-circle">
         <span>VACINAÇÃO ANIMAL</span>
       </a>
       <ul class="nav flex-column">
@@ -115,27 +126,6 @@ document.addEventListener("DOMContentLoaded", function () {
         </li>
 
         <li class="nav-item">
-          <a class="nav-link d-flex justify-content-between align-items-center ${currentPath.includes("Cadastro de") || currentPath.includes("medicamento") ? "active" : ""}" data-bs-toggle="collapse" href="#menuCadastros" role="button">
-            <span><i class="bi bi-folder-fill"></i> Cadastros (Antigos)</span>
-            <i class="bi bi-chevron-down small"></i>
-          </a>
-          <div class="collapse ${currentPath.includes("Cadastro de") || currentPath.includes("medicamento") ? "show" : ""}" id="menuCadastros">
-            <ul class="nav flex-column ms-3 mt-1">
-              <li>
-                <a class="nav-link py-1 px-3 ${currentPath.includes("Cadastro de vacina") ? "fw-bold text-white" : ""}" href="${prefix}Cadastro de vacina.php">
-                  <i class="bi bi-virus"></i> Nova Vacina
-                </a>
-              </li>
-              <li>
-                <a class="nav-link py-1 px-3 ${currentPath.includes("Cadastro de medicamento") ? "fw-bold text-white" : ""}" href="${prefix}Cadastro de medicamento.php">
-                  <i class="bi bi-capsule"></i> Medicamentos
-                </a>
-              </li>
-            </ul>
-          </div>
-        </li>
-
-        <li class="nav-item">
           <a class="nav-link ${currentPath.includes("Lote") ? "active" : ""}" href="${prefix}Lote.php">
             <i class="bi bi-tags-fill"></i> Lotes
           </a>
@@ -164,12 +154,16 @@ document.addEventListener("DOMContentLoaded", function () {
     
     <div class="mt-auto">
       <div class="d-flex align-items-center gap-2 mb-3 p-2 bg-white bg-opacity-10 rounded">
-        <div class="avatar bg-white text-success rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 38px; height: 38px; font-size: 1.1rem; flex-shrink: 0;">
-          ${(window.USER_SESSION?.nome || 'U').charAt(0).toUpperCase()}
-        </div>
+        ${userFoto ? `
+          <img src="${userFoto}" alt="Avatar" class="rounded-circle border" style="width: 38px; height: 38px; object-fit: cover; flex-shrink: 0;">
+        ` : `
+          <div class="avatar bg-white text-success rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 38px; height: 38px; font-size: 1.1rem; flex-shrink: 0;">
+            ${userNome.charAt(0).toUpperCase()}
+          </div>
+        `}
         <div class="overflow-hidden" style="line-height: 1.2;">
-          <div class="fw-bold text-truncate text-white" style="font-size: 0.85rem;" title="${window.USER_SESSION?.nome || 'Usuário'}">
-            ${window.USER_SESSION?.nome || 'Usuário'}
+          <div class="fw-bold text-truncate text-white" style="font-size: 0.85rem;" title="${userNome}">
+            ${userNome}
           </div>
           <div class="text-white-50 text-truncate" style="font-size: 0.75rem;">
             ${isAdmin ? 'Administrador' : 'Veterinário'}
