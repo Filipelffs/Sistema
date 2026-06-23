@@ -29,15 +29,15 @@ document.addEventListener("DOMContentLoaded", function () {
 
   let pageTitle = "Vacinação Animal";
   if (currentPath.includes("Dashboard")) pageTitle = "DASHBOARD";
-  else if (currentPath.includes("cadastro de animal")) pageTitle = "CADASTRO DE ANIMAL";
-  else if (currentPath.includes("Lista de animal") || currentPath.includes("Module de animal")) pageTitle = "MÓDULO ANIMAL";
+  else if (currentPath.includes("cadastro_animal")) pageTitle = "CADASTRO DE ANIMAL";
+  else if (currentPath.includes("lista_animal") || currentPath.includes("module_animal")) pageTitle = "MÓDULO ANIMAL";
   else if (currentPath.includes("Ficha de animal")) pageTitle = "FICHA DE ANIMAL";
   else if (currentPath.includes("historico_de_vacinas")) pageTitle = "HISTÓRICO DE VACINAS";
   else if (currentPath.includes("lista_vacinas")) pageTitle = "ESTOQUE DE VACINAS E MEDICAÇÕES";
   else if (currentPath.includes("Cadastro de vacina")) pageTitle = "CADASTRO DE VACINA";
   else if (currentPath.includes("Cadastro de medicamento")) pageTitle = "CADASTRO DE MEDICAMENTOS";
-  else if (currentPath.includes("Registro de Aplicação")) pageTitle = "REGISTRO DE APLICAÇÃO";
-  else if (currentPath.includes("Vacinação")) pageTitle = "STATUS DE VACINAS";
+  else if (currentPath.includes("registro_aplicacao")) pageTitle = "REGISTRO DE APLICAÇÃO";
+  else if (currentPath.includes("vacinacao")) pageTitle = "STATUS DE VACINAS";
   else if (currentPath.includes("Lote")) pageTitle = "LOTES";
   else if (currentPath.includes("Relatorios")) pageTitle = "RELATÓRIOS";
   else if (currentPath.includes("Configuracoes")) pageTitle = "CONFIGURAÇÕES";
@@ -80,18 +80,18 @@ document.addEventListener("DOMContentLoaded", function () {
             <ul class="nav flex-column ms-3 mt-1">
               ${isAdmin ? `
               <li>
-                <a class="nav-link py-1 px-3 ${currentPath.includes("cadastro de animal") ? "fw-bold text-white" : ""}" href="${prefix}cadastro de animal.php">
+                <a class="nav-link py-1 px-3 ${currentPath.includes("cadastro_animal") ? "fw-bold text-white" : ""}" href="${prefix}cadastro_animal.php">
                   <i class="bi bi-plus-circle"></i> Cadastrar Animal
                 </a>
               </li>
               ` : ''}
               <li>
-                <a class="nav-link py-1 px-3 ${currentPath.includes("Lista de animal") ? "fw-bold text-white" : ""}" href="${prefix}Lista de animal.php">
+                <a class="nav-link py-1 px-3 ${currentPath.includes("lista_animal") ? "fw-bold text-white" : ""}" href="${prefix}lista_animal.php">
                   <i class="bi bi-list-ul"></i> Lista de Animais
                 </a>
               </li>
               <li>
-                <a class="nav-link py-1 px-3 ${currentPath.includes("Module de animal") ? "fw-bold text-white" : ""}" href="${prefix}Module de animal.php">
+                <a class="nav-link py-1 px-3 ${currentPath.includes("module_animal") ? "fw-bold text-white" : ""}" href="${prefix}module_animal.php">
                   <i class="bi bi-info-circle"></i> Módulo Animal
                 </a>
               </li>
@@ -100,14 +100,14 @@ document.addEventListener("DOMContentLoaded", function () {
         </li>
 
         <li class="nav-item">
-          <a class="nav-link d-flex justify-content-between align-items-center ${currentPath.includes("Vacina") || currentPath.includes("vacina") || currentPath.includes("Aplicação") ? "active" : ""}" data-bs-toggle="collapse" href="#menuSaude" role="button">
+          <a class="nav-link d-flex justify-content-between align-items-center ${currentPath.includes("Vacina") || currentPath.includes("vacina") || currentPath.includes("registro_aplicacao") ? "active" : ""}" data-bs-toggle="collapse" href="#menuSaude" role="button">
             <span><i class="bi bi-heart-pulse-fill"></i> Saúde</span>
             <i class="bi bi-chevron-down small"></i>
           </a>
-          <div class="collapse ${currentPath.includes("Vacina") || currentPath.includes("vacina") || currentPath.includes("Aplicação") || currentPath.includes("Vacinação") ? "show" : ""}" id="menuSaude">
+          <div class="collapse ${currentPath.includes("Vacina") || currentPath.includes("vacina") || currentPath.includes("registro_aplicacao") || currentPath.includes("vacinacao") ? "show" : ""}" id="menuSaude">
             <ul class="nav flex-column ms-3 mt-1">
               <li>
-                <a class="nav-link py-1 px-3 ${currentPath.includes("Registro de Aplicação") ? "fw-bold text-white" : ""}" href="${prefix}Registro de Aplicação.php">
+                <a class="nav-link py-1 px-3 ${currentPath.includes("registro_aplicacao") ? "fw-bold text-white" : ""}" href="${prefix}registro_aplicacao.php">
                   <i class="bi bi-plus-circle"></i> Nova Aplicação
                 </a>
               </li>

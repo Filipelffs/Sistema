@@ -31,7 +31,7 @@ require_once "sessao.php";
       <h2 class="titulo-pagina">Histórico de Aplicações</h2>
       <p class="subtitulo">Registro completo de vacinas e medicamentos aplicados</p>
     </div>
-    <a class="btn btn-success rounded-pill px-4 py-2" href="Registro de Aplicação.php">
+    <a class="btn btn-success rounded-pill px-4 py-2" href="registro_aplicacao.php">
       <i class="bi bi-plus-circle me-2"></i> Nova Aplicação
     </a>
   </div>

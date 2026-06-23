@@ -83,18 +83,18 @@ require_once "sessao.php";
   <div class="row mt-4 g-3">
     <?php if ($_SESSION['usuario_tipo'] === 'admin'): ?>
     <div class="col-12 col-md-6">
-      <a href="cadastro de animal.php" class="btn btn-success btn-lg w-100 rounded-pill py-3 d-flex align-items-center justify-content-center gap-2 shadow-sm">
+      <a href="cadastro_animal.php" class="btn btn-success btn-lg w-100 rounded-pill py-3 d-flex align-items-center justify-content-center gap-2 shadow-sm">
         <i class="bi bi-plus-circle"></i> CADASTRAR ANIMAL
       </a>
     </div>
     <div class="col-12 col-md-6">
-      <a href="Registro de Aplicação.php" class="btn btn-outline-success btn-lg w-100 rounded-pill py-3 d-flex align-items-center justify-content-center gap-2 shadow-sm">
+      <a href="registro_aplicacao.php" class="btn btn-outline-success btn-lg w-100 rounded-pill py-3 d-flex align-items-center justify-content-center gap-2 shadow-sm">
         <i class="bi bi-virus"></i> NOVA APLICAÇÃO
       </a>
     </div>
     <?php else: ?>
     <div class="col-12">
-      <a href="Registro de Aplicação.php" class="btn btn-success btn-lg w-100 rounded-pill py-3 d-flex align-items-center justify-content-center gap-2 shadow-sm">
+      <a href="registro_aplicacao.php" class="btn btn-success btn-lg w-100 rounded-pill py-3 d-flex align-items-center justify-content-center gap-2 shadow-sm">
         <i class="bi bi-virus"></i> NOVA APLICAÇÃO
       </a>
     </div>
@@ -143,7 +143,7 @@ require_once "sessao.php";
                     <h6>${a.nome_animal} (${a.numero_brinco || 'N/A'})</h6>
                     <p>Este animal não possui nenhum registro de aplicação no sistema.</p>
                   </div>
-                  <a href="Ficha de animal.php?id=${a.id_animal}" class="btn btn-sm btn-danger rounded-pill px-3">Ver Ficha</a>
+                  <a href="ficha_animal.php?id=${a.id_animal}" class="btn btn-sm btn-danger rounded-pill px-3">Ver Ficha</a>
                 </div>
               `;
             });

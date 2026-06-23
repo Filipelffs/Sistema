@@ -7,7 +7,6 @@ header('Content-Type: application/json');
 $action = $_GET['action'] ?? '';
 
 if ($action === 'list') {
-    // List all lotes and count of animals
     $sql = "SELECT l.id_lote, l.codigo_lote, l.tipo_animal, l.quantidade_animais, COUNT(a.id_animal) as qtd_real 
             FROM lotes l 
             LEFT JOIN animais a ON a.id_lote = l.id_lote 
@@ -16,7 +15,6 @@ if ($action === 'list') {
     $lotes = [];
     if ($result) {
         while ($row = $result->fetch_assoc()) {
-            // Also fetch animals for this lote to display in the table
             $sqlAnimais = "SELECT id_animal, numero_brinco, nome_animal FROM animais WHERE id_lote = " . $row['id_lote'];
             $resAnimais = $conn->query($sqlAnimais);
             $animais = [];
@@ -34,7 +32,7 @@ if ($action === 'list') {
 }
 
 // Below actions require ADMIN permission
-if ($action === 'create' || $action === 'edit' || $action === 'delete') {
+if (in_array($action, ['create', 'edit', 'delete', 'delete_animal', 'remove_all_animals'])) {
     if (!isset($_SESSION['usuario_tipo']) || $_SESSION['usuario_tipo'] !== 'admin') {
         echo json_encode(['success' => false, 'message' => 'Permissão negada. Apenas administradores podem realizar esta ação.']);
         exit;
@@ -44,13 +42,11 @@ if ($action === 'create' || $action === 'edit' || $action === 'delete') {
 
     if ($action === 'create') {
         $codigo_lote = $conn->real_escape_string($input['codigo_lote']);
-        // Check if exists
         $check = $conn->query("SELECT id_lote FROM lotes WHERE codigo_lote = '$codigo_lote'");
         if ($check->num_rows > 0) {
             echo json_encode(['success' => false, 'message' => 'Já existe um lote com este nome.']);
             exit;
         }
-
         $sql = "INSERT INTO lotes (codigo_lote) VALUES ('$codigo_lote')";
         if ($conn->query($sql)) {
             echo json_encode(['success' => true, 'message' => 'Lote criado com sucesso!']);
@@ -62,13 +58,11 @@ if ($action === 'create' || $action === 'edit' || $action === 'delete') {
     if ($action === 'edit') {
         $id_lote = intval($input['id_lote']);
         $codigo_lote = $conn->real_escape_string($input['codigo_lote']);
-        
         $check = $conn->query("SELECT id_lote FROM lotes WHERE codigo_lote = '$codigo_lote' AND id_lote != $id_lote");
         if ($check->num_rows > 0) {
             echo json_encode(['success' => false, 'message' => 'Já existe um lote com este nome.']);
             exit;
         }
-
         $sql = "UPDATE lotes SET codigo_lote = '$codigo_lote' WHERE id_lote = $id_lote";
         if ($conn->query($sql)) {
             echo json_encode(['success' => true, 'message' => 'Lote atualizado com sucesso!']);
@@ -78,14 +72,40 @@ if ($action === 'create' || $action === 'edit' || $action === 'delete') {
     }
 
     if ($action === 'delete') {
+        // Exclui o lote. Os animais ficam com id_lote = NULL (dispersos)
         $id_lote = intval($input['id_lote']);
+        $conn->query("UPDATE animais SET id_lote = NULL WHERE id_lote = $id_lote");
         $sql = "DELETE FROM lotes WHERE id_lote = $id_lote";
         if ($conn->query($sql)) {
-            echo json_encode(['success' => true, 'message' => 'Lote excluído com sucesso!']);
+            echo json_encode(['success' => true, 'message' => 'Lote excluído. Os animais ficaram dispersos.']);
         } else {
             echo json_encode(['success' => false, 'message' => 'Erro ao excluir lote: ' . $conn->error]);
         }
     }
+
+    if ($action === 'delete_animal') {
+        // Remove um animal específico do lote (animal fica sem lote)
+        $id_animal = intval($input['id_animal']);
+        $id_lote   = intval($input['id_lote']);
+        $sql = "UPDATE animais SET id_lote = NULL WHERE id_animal = $id_animal AND id_lote = $id_lote";
+        if ($conn->query($sql) && $conn->affected_rows > 0) {
+            echo json_encode(['success' => true, 'message' => 'Animal removido do lote com sucesso.']);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Nenhum animal alterado. Verifique os dados.']);
+        }
+    }
+
+    if ($action === 'remove_all_animals') {
+        // Remove todos os animais do lote (ficam dispersos), mas mantém o lote
+        $id_lote = intval($input['id_lote']);
+        $sql = "UPDATE animais SET id_lote = NULL WHERE id_lote = $id_lote";
+        if ($conn->query($sql)) {
+            echo json_encode(['success' => true, 'message' => 'Todos os animais foram removidos do lote.']);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Erro ao remover animais: ' . $conn->error]);
+        }
+    }
+
     exit;
 }
 
