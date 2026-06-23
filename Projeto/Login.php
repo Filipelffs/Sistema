@@ -3,13 +3,14 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
+require_once dirname(dirname(__FILE__)) . '/config.php';
+require_once CONEXAO_FILE;
+
 // Se já estiver logado, redireciona para a dashboard
 if (isset($_SESSION['usuario_id'])) {
     header("Location: Dashboard.php");
     exit();
 }
-
-require_once "../Banco/conexao.php";
 
 $erro = "";
 
