@@ -30,14 +30,12 @@ document.addEventListener("DOMContentLoaded", function () {
   let pageTitle = "Vacinação Animal";
   if (currentPath.includes("Dashboard")) pageTitle = "DASHBOARD";
   else if (currentPath.includes("cadastro_animal")) pageTitle = "CADASTRO DE ANIMAL";
-  else if (currentPath.includes("lista_animal") || currentPath.includes("module_animal")) pageTitle = "MÓDULO ANIMAL";
-  else if (currentPath.includes("Ficha de animal")) pageTitle = "FICHA DE ANIMAL";
+  else if (currentPath.includes("lista_animal")) pageTitle = "LISTA DE ANIMAIS";
+  else if (currentPath.includes("modulo_animal")) pageTitle = "MÓDULO ANIMAL";
+  else if (currentPath.includes("ficha_animal")) pageTitle = "FICHA DO ANIMAL";
   else if (currentPath.includes("historico_de_vacinas")) pageTitle = "HISTÓRICO DE VACINAS";
   else if (currentPath.includes("lista_vacinas")) pageTitle = "ESTOQUE DE VACINAS E MEDICAÇÕES";
-  else if (currentPath.includes("Cadastro de vacina")) pageTitle = "CADASTRO DE VACINA";
-  else if (currentPath.includes("Cadastro de medicamento")) pageTitle = "CADASTRO DE MEDICAMENTOS";
   else if (currentPath.includes("registro_aplicacao")) pageTitle = "REGISTRO DE APLICAÇÃO";
-  else if (currentPath.includes("vacinacao")) pageTitle = "STATUS DE VACINAS";
   else if (currentPath.includes("Lote")) pageTitle = "LOTES";
   else if (currentPath.includes("Relatorios")) pageTitle = "RELATÓRIOS";
   else if (currentPath.includes("Configuracoes")) pageTitle = "CONFIGURAÇÕES";
@@ -91,7 +89,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 </a>
               </li>
               <li>
-                <a class="nav-link py-1 px-3 ${currentPath.includes("module_animal") ? "fw-bold text-white" : ""}" href="${prefix}module_animal.php">
+                <a class="nav-link py-1 px-3 ${currentPath.includes("modulo_animal") ? "fw-bold text-white" : ""}" href="${prefix}modulo_animal.php">
                   <i class="bi bi-info-circle"></i> Módulo Animal
                 </a>
               </li>
