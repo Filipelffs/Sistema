@@ -127,6 +127,13 @@ if ($checkStatusA->num_rows == 0) {
     $conn->query("ALTER TABLE aplicacoes ADD COLUMN status_aplicacao ENUM('Concluído', 'Pendente', 'Atrasada') DEFAULT 'Concluído'");
 }
 
+// Add foto_animal column if missing
+$checkFotoAnimal = $conn->query("SHOW COLUMNS FROM animais LIKE 'foto_animal'");
+if ($checkFotoAnimal->num_rows == 0) {
+    $conn->query("ALTER TABLE animais ADD COLUMN foto_animal VARCHAR(255) DEFAULT NULL");
+    echo "Coluna 'foto_animal' adicionada à tabela animais.<br>";
+}
+
 // 7. Create notificacoes table
 $sql_notif = "CREATE TABLE IF NOT EXISTS notificacoes (
     id_notificacao INT PRIMARY KEY AUTO_INCREMENT,
@@ -136,6 +143,88 @@ $sql_notif = "CREATE TABLE IF NOT EXISTS notificacoes (
     criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 )";
 $conn->query($sql_notif);
+
+// 7b. Create cronograma_vacinacao table
+$sql_cronograma = "CREATE TABLE IF NOT EXISTS cronograma_vacinacao (
+    id_cronograma INT PRIMARY KEY AUTO_INCREMENT,
+    id_animal INT NOT NULL,
+    id_vacina_medicamento INT NOT NULL,
+    data_prevista DATE NOT NULL,
+    dose VARCHAR(100) DEFAULT '1ª dose',
+    id_usuario_responsavel INT DEFAULT NULL,
+    status_cronograma ENUM('Agendada', 'Hoje', 'Aplicada', 'Atrasada', 'Pendente') DEFAULT 'Agendada',
+    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_animal) REFERENCES animais(id_animal) ON DELETE CASCADE,
+    FOREIGN KEY (id_vacina_medicamento) REFERENCES vacinas_medicamentos(id) ON DELETE CASCADE,
+    FOREIGN KEY (id_usuario_responsavel) REFERENCES usuarios(id_usuario) ON DELETE SET NULL
+)";
+if ($conn->query($sql_cronograma) === TRUE) {
+    echo "Tabela 'cronograma_vacinacao' configurada com sucesso.<br>";
+}
+
+// Seed cronograma_vacinacao if empty
+$checkCrono = $conn->query("SELECT COUNT(*) as total FROM cronograma_vacinacao");
+$cronoCount = $checkCrono ? $checkCrono->fetch_assoc()['total'] : 0;
+if ($cronoCount == 0) {
+    $resA = $conn->query("SELECT id_animal FROM animais");
+    $resV = $conn->query("SELECT id FROM vacinas_medicamentos WHERE tipo = 'vacina'");
+    $resU = $conn->query("SELECT id_usuario FROM usuarios WHERE tipo_usuario = 'veterinario' LIMIT 1");
+    
+    $animalIds = [];
+    if ($resA) {
+        while($row = $resA->fetch_assoc()) { $animalIds[] = $row['id_animal']; }
+    }
+    $vacIds = [];
+    if ($resV) {
+        while($row = $resV->fetch_assoc()) { $vacIds[] = $row['id']; }
+    }
+    $userId = ($resU && $resU->num_rows > 0) ? $resU->fetch_assoc()['id_usuario'] : null;
+    
+    if (count($animalIds) >= 2 && count($vacIds) >= 1) {
+        $today = date('Y-m-d');
+        
+        // 3 Atrasadas
+        $past1 = date('Y-m-d', strtotime('-5 days'));
+        $past2 = date('Y-m-d', strtotime('-3 days'));
+        $past3 = date('Y-m-d', strtotime('-1 days'));
+        
+        $atrasadas = [
+            [$animalIds[0], $vacIds[0], $past1, '1ª dose', $userId, 'Atrasada'],
+            [$animalIds[1], $vacIds[0], $past2, '1ª dose', $userId, 'Atrasada'],
+            [$animalIds[0], $vacIds[0], $past3, '2ª dose (reforço)', $userId, 'Atrasada']
+        ];
+        
+        // 5 Hoje
+        $hoje = [
+            [$animalIds[0], $vacIds[0], $today, '1ª dose', $userId, 'Hoje'],
+            [$animalIds[1], $vacIds[0], $today, '1ª dose', $userId, 'Hoje'],
+            [$animalIds[2 % count($animalIds)], $vacIds[0], $today, '1ª dose', $userId, 'Hoje'],
+            [$animalIds[3 % count($animalIds)], $vacIds[0], $today, '2ª dose (reforço)', $userId, 'Hoje'],
+            [$animalIds[4 % count($animalIds)], $vacIds[0], $today, '1ª dose', $userId, 'Hoje']
+        ];
+        
+        // 8 Reforços (future / pending within 7 days)
+        $reforcos = [];
+        for ($i = 1; $i <= 8; $i++) {
+            $futureDate = date('Y-m-d', strtotime('+' . ($i % 6 + 1) . ' days'));
+            $aId = $animalIds[$i % count($animalIds)];
+            $vId = $vacIds[$i % count($vacIds)];
+            $reforcos[] = [$aId, $vId, $futureDate, '2ª dose (reforço)', $userId, 'Pendente'];
+        }
+        
+        $allSeeds = array_merge($atrasadas, $hoje, $reforcos);
+        foreach ($allSeeds as $s) {
+            $stmt = $conn->prepare("INSERT INTO cronograma_vacinacao (id_animal, id_vacina_medicamento, data_prevista, dose, id_usuario_responsavel, status_cronograma) VALUES (?, ?, ?, ?, ?, ?)");
+            if ($stmt) {
+                $uVal = $s[4];
+                $stmt->bind_param("iisiss", $s[0], $s[1], $s[2], $s[3], $uVal, $s[5]);
+                $stmt->execute();
+                $stmt->close();
+            }
+        }
+        echo "Dados iniciais semeados na tabela 'cronograma_vacinacao'.<br>";
+    }
+}
 
 echo "Todas as tabelas configuradas com sucesso.<br>";
 

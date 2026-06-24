@@ -36,6 +36,7 @@ document.addEventListener("DOMContentLoaded", function () {
   else if (currentPath.includes("historico_de_vacinas")) pageTitle = "HISTÓRICO DE VACINAS";
   else if (currentPath.includes("lista_vacinas")) pageTitle = "ESTOQUE DE VACINAS E MEDICAÇÕES";
   else if (currentPath.includes("registro_aplicacao")) pageTitle = "REGISTRO DE APLICAÇÃO";
+  else if (currentPath.includes("cronograma")) pageTitle = "CRONOGRAMA DE VACINAÇÃO";
   else if (currentPath.includes("Lote")) pageTitle = "LOTES";
   else if (currentPath.includes("Relatorios")) pageTitle = "RELATÓRIOS";
   else if (currentPath.includes("Configuracoes")) pageTitle = "CONFIGURAÇÕES";
@@ -102,8 +103,13 @@ document.addEventListener("DOMContentLoaded", function () {
             <span><i class="bi bi-heart-pulse-fill"></i> Saúde</span>
             <i class="bi bi-chevron-down small"></i>
           </a>
-          <div class="collapse ${currentPath.includes("Vacina") || currentPath.includes("vacina") || currentPath.includes("registro_aplicacao") || currentPath.includes("vacinacao") ? "show" : ""}" id="menuSaude">
+          <div class="collapse ${currentPath.includes("Vacina") || currentPath.includes("vacina") || currentPath.includes("registro_aplicacao") || currentPath.includes("cronograma") ? "show" : ""}" id="menuSaude">
             <ul class="nav flex-column ms-3 mt-1">
+              <li>
+                <a class="nav-link py-1 px-3 ${currentPath.includes("cronograma") ? "fw-bold text-white" : ""}" href="${prefix}cronograma.php">
+                  <i class="bi bi-calendar-event"></i> Cronograma
+                </a>
+              </li>
               <li>
                 <a class="nav-link py-1 px-3 ${currentPath.includes("registro_aplicacao") ? "fw-bold text-white" : ""}" href="${prefix}registro_aplicacao.php">
                   <i class="bi bi-plus-circle"></i> Nova Aplicação

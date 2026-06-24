@@ -147,9 +147,9 @@ if ($resRacas) {
       }
 
       lista.forEach(animal => {
-        // Choose image based on species
-        let imgUrl = "https://images.unsplash.com/photo-1570042225831-d98fa7577f1e?q=80&w=150";
-        if (animal.especie && animal.especie.toLowerCase().includes("capri")) {
+        // Choose image based on species or custom foto_animal
+        let imgUrl = animal.foto_animal ? animal.foto_animal : "https://images.unsplash.com/photo-1570042225831-d98fa7577f1e?q=80&w=150";
+        if (!animal.foto_animal && animal.especie && animal.especie.toLowerCase().includes("capri")) {
           imgUrl = "https://images.unsplash.com/photo-1524388680868-377a2e6bbb1c?q=80&w=150";
         }
 

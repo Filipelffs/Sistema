@@ -93,21 +93,7 @@ if (!$user['foto']) {
 
     <!-- Preferences & Security (Right) -->
     <div class="col-12 col-md-6 mb-4">
-      <div class="card card-premium shadow-sm mb-4">
-        <div class="card-header-green">
-          <span>Segurança</span>
-          <i class="bi bi-shield-lock-fill"></i>
-        </div>
-        <div class="card-body">
-          <a href="#" class="d-flex justify-content-between align-items-center text-decoration-none text-dark py-2">
-            <div class="d-flex align-items-center gap-2">
-              <i class="bi bi-key-fill text-success fs-5"></i>
-              <span>Alterar senha de acesso</span>
-            </div>
-            <i class="bi bi-chevron-right text-muted"></i>
-          </a>
-        </div>
-      </div>
+
 
       <div class="card card-premium shadow-sm">
         <div class="card-header-green">

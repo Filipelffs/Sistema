@@ -95,11 +95,18 @@ if ($animalId > 0) {
           <div>
             <?php
               $imgUrl = "https://images.unsplash.com/photo-1570042225831-d98fa7577f1e?q=80&w=250"; // Bovino default
-              if (stripos($animal['especie'], 'capri') !== false || stripos($animal['especie'], 'bode') !== false || stripos($animal['especie'], 'cabra') !== false) {
-                $imgUrl = "https://images.unsplash.com/photo-1524388680868-377a2e6bbb1c?q=80&w=250"; // Capri default
+              if (!empty($animal['foto_animal'])) {
+                  $imgUrl = htmlspecialchars($animal['foto_animal']);
+              } elseif (stripos($animal['especie'], 'capri') !== false || stripos($animal['especie'], 'bode') !== false || stripos($animal['especie'], 'cabra') !== false) {
+                  $imgUrl = "https://images.unsplash.com/photo-1524388680868-377a2e6bbb1c?q=80&w=250"; // Capri default
               }
             ?>
-            <img src="<?= $imgUrl ?>" alt="Animal Photo" class="animal-profile-img shadow-sm" id="profileFoto">
+            <div class="position-relative d-inline-block">
+              <img src="<?= $imgUrl ?>" alt="Animal Photo" class="animal-profile-img shadow-sm" id="profileFoto" style="width: 150px; height: 150px; object-fit: cover; border-radius: 20px;">
+              <button class="btn btn-sm btn-success rounded-circle position-absolute bottom-0 end-0 m-1 shadow-sm d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;" data-bs-toggle="modal" data-bs-target="#modalFotoAnimal" title="Alterar Foto">
+                <i class="bi bi-camera-fill"></i>
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -202,6 +209,82 @@ if ($animalId > 0) {
     </div>
   </div>
   <?php endif; ?>
+
+  <!-- MODAL ALTERAR FOTO ANIMAL -->
+  <div class="modal fade" id="modalFotoAnimal" tabindex="-1" aria-labelledby="modalFotoAnimalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 rounded-4">
+        <div class="modal-header bg-success text-white rounded-top-4">
+          <h5 class="modal-title" id="modalFotoAnimalLabel"><i class="bi bi-camera me-2"></i>Alterar Foto do Animal</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="fotoAnimalForm" enctype="multipart/form-data">
+            <input type="hidden" name="id_animal" value="<?= $animal['id_animal'] ?>">
+            
+            <div id="uploadAlert" class="alert d-none"></div>
+
+            <!-- Upload File -->
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Enviar arquivo do computador</label>
+              <input type="file" name="foto_animal" id="fileFotoAnimal" class="form-control" accept="image/*">
+              <div class="form-text">Imagens JPG, PNG, GIF ou WEBP (máx. 2MB).</div>
+            </div>
+
+            <div class="text-center my-3 text-muted fw-bold">--- OU ---</div>
+
+            <!-- Image URL -->
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Link (URL) da imagem na internet</label>
+              <input type="url" name="foto_url" id="urlFotoAnimal" class="form-control" placeholder="https://exemplo.com/foto.jpg">
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer border-0">
+          <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-success rounded-pill px-4" id="btnSalvarFoto" onclick="enviarFotoAnimal()">Salvar Foto</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    async function enviarFotoAnimal() {
+      const btn = document.getElementById("btnSalvarFoto");
+      const alertDiv = document.getElementById("uploadAlert");
+      
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Salvando...';
+      alertDiv.classList.add("d-none");
+      
+      const formData = new FormData(document.getElementById("fotoAnimalForm"));
+      
+      try {
+        const response = await fetch('upload_foto_animal.php', {
+          method: 'POST',
+          body: formData
+        });
+        const result = await response.json();
+        
+        if (result.success) {
+          alert("Foto do animal atualizada com sucesso!");
+          window.location.reload();
+        } else {
+          alertDiv.className = "alert alert-danger";
+          alertDiv.textContent = result.message;
+          alertDiv.classList.remove("d-none");
+          btn.disabled = false;
+          btn.innerHTML = 'Salvar Foto';
+        }
+      } catch (error) {
+        alertDiv.className = "alert alert-danger";
+        alertDiv.textContent = "Erro de conexão com o servidor.";
+        alertDiv.classList.remove("d-none");
+        btn.disabled = false;
+        btn.innerHTML = 'Salvar Foto';
+      }
+    }
+  </script>
 
   <!-- Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

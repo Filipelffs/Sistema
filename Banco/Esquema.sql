@@ -42,6 +42,7 @@ CREATE TABLE IF NOT EXISTS animais (
     peso DECIMAL(10,2),
     id_lote INT,
     status_animal ENUM('Saudavel','Doente','Tratamento') DEFAULT 'Saudavel',
+    foto_animal VARCHAR(255) DEFAULT NULL,
     criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (id_lote) REFERENCES lotes(id_lote) ON DELETE SET NULL
 );
@@ -84,6 +85,23 @@ CREATE TABLE IF NOT EXISTS notificacoes (
     mensagem TEXT,
     status_notificacao ENUM('pendente','lida') DEFAULT 'pendente',
     criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- =========================
+-- TABELA CRONOGRAMA DE VACINAÇÃO
+-- =========================
+CREATE TABLE IF NOT EXISTS cronograma_vacinacao (
+    id_cronograma INT PRIMARY KEY AUTO_INCREMENT,
+    id_animal INT NOT NULL,
+    id_vacina_medicamento INT NOT NULL,
+    data_prevista DATE NOT NULL,
+    dose VARCHAR(100) DEFAULT '1ª dose',
+    id_usuario_responsavel INT DEFAULT NULL,
+    status_cronograma ENUM('Agendada', 'Hoje', 'Aplicada', 'Atrasada', 'Pendente') DEFAULT 'Agendada',
+    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_animal) REFERENCES animais(id_animal) ON DELETE CASCADE,
+    FOREIGN KEY (id_vacina_medicamento) REFERENCES vacinas_medicamentos(id) ON DELETE CASCADE,
+    FOREIGN KEY (id_usuario_responsavel) REFERENCES usuarios(id_usuario) ON DELETE SET NULL
 );
 
 -- =========================
