@@ -112,16 +112,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 Entrar
             </button>
 
-            <!-- Social Login -->
-            <div class="social-login">
-                <div class="social-title">ou continue com</div>
-                <div class="social-icons">
-                    <button type="button" class="social-btn"><i class="bi bi-google text-danger"></i></button>
-                    <button type="button" class="social-btn"><i class="bi bi-facebook text-primary"></i></button>
-                    <button type="button" class="social-btn"><i class="bi bi-apple text-dark"></i></button>
-                </div>
-            </div>
-
 
         </form>
     </div>
