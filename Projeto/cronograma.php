@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 require_once "sessao.php";
 require_once "../Banco/conexao.php";
 
@@ -166,7 +166,7 @@ $appliedMonthDisplay = max(85, $appliedMonth);
   <div class="row g-3 mb-4">
     <!-- Card 1: Late -->
     <div class="col-12 col-sm-6 col-lg-3">
-      <div class="card border-0 shadow-sm rounded-4 h-100 kpi-card-hover" style="border-left: 5px solid #dc3545 !important; background: white;">
+      <div class="card border-0 shadow-sm rounded-4 h-100 kpi-card-hover" style="border-left: 5px solid #dc3545 !important;">
         <div class="card-body py-3 d-flex align-items-center justify-content-between">
           <div>
             <span class="text-muted small fw-bold">🔴 Vacinas Atrasadas</span>
@@ -180,7 +180,7 @@ $appliedMonthDisplay = max(85, $appliedMonth);
     </div>
     <!-- Card 2: Today -->
     <div class="col-12 col-sm-6 col-lg-3">
-      <div class="card border-0 shadow-sm rounded-4 h-100 kpi-card-hover" style="border-left: 5px solid #ffc107 !important; background: white;">
+      <div class="card border-0 shadow-sm rounded-4 h-100 kpi-card-hover" style="border-left: 5px solid #ffc107 !important;">
         <div class="card-body py-3 d-flex align-items-center justify-content-between">
           <div>
             <span class="text-muted small fw-bold">🟡 Vacinas para Hoje</span>
@@ -194,7 +194,7 @@ $appliedMonthDisplay = max(85, $appliedMonth);
     </div>
     <!-- Card 3: Booster -->
     <div class="col-12 col-sm-6 col-lg-3">
-      <div class="card border-0 shadow-sm rounded-4 h-100 kpi-card-hover" style="border-left: 5px solid #198754 !important; background: white;">
+      <div class="card border-0 shadow-sm rounded-4 h-100 kpi-card-hover" style="border-left: 5px solid #198754 !important;">
         <div class="card-body py-3 d-flex align-items-center justify-content-between">
           <div>
             <span class="text-muted small fw-bold">🟢 Próximos Reforços</span>
@@ -208,7 +208,7 @@ $appliedMonthDisplay = max(85, $appliedMonth);
     </div>
     <!-- Card 4: Applied -->
     <div class="col-12 col-sm-6 col-lg-3">
-      <div class="card border-0 shadow-sm rounded-4 h-100 kpi-card-hover" style="border-left: 5px solid #0dcaf0 !important; background: white;">
+      <div class="card border-0 shadow-sm rounded-4 h-100 kpi-card-hover" style="border-left: 5px solid #0dcaf0 !important;">
         <div class="card-body py-3 d-flex align-items-center justify-content-between">
           <div>
             <span class="text-muted small fw-bold">✅ Aplicadas no Mês</span>
@@ -366,27 +366,27 @@ $appliedMonthDisplay = max(85, $appliedMonth);
             <div class="row g-2 mb-3">
               <div class="col-6">
                 <label class="form-label small fw-semibold">Animal</label>
-                <input type="text" id="cronoAnimalNome" class="form-control" readonly disabled style="background-color: #e9ecef;">
+                <input type="text" id="cronoAnimalNome" class="form-control" readonly disabled>
               </div>
               <div class="col-6">
                 <label class="form-label small fw-semibold">Brinco</label>
-                <input type="text" id="cronoBrinco" class="form-control" readonly disabled style="background-color: #e9ecef;">
+                <input type="text" id="cronoBrinco" class="form-control" readonly disabled>
               </div>
             </div>
 
             <div class="mb-3">
               <label class="form-label small fw-semibold">Vacina</label>
-              <input type="text" id="cronoVacinaNome" class="form-control" readonly disabled style="background-color: #e9ecef;">
+              <input type="text" id="cronoVacinaNome" class="form-control" readonly disabled>
             </div>
 
             <div class="row g-2 mb-3">
               <div class="col-6">
                 <label class="form-label small fw-semibold">Lote da Vacina</label>
-                <input type="text" id="cronoLoteEstoque" class="form-control" readonly disabled style="background-color: #e9ecef;">
+                <input type="text" id="cronoLoteEstoque" class="form-control" readonly disabled>
               </div>
               <div class="col-6">
                 <label class="form-label small fw-semibold">Validade da Vacina</label>
-                <input type="text" id="cronoValidadeEstoque" class="form-control" readonly disabled style="background-color: #e9ecef;">
+                <input type="text" id="cronoValidadeEstoque" class="form-control" readonly disabled>
               </div>
             </div>
 
@@ -411,7 +411,7 @@ $appliedMonthDisplay = max(85, $appliedMonth);
             </div>
 
             <!-- Agendamento de reforço -->
-            <div class="card border-0 bg-light p-3 rounded-3 mb-3">
+            <div class="card border-0 p-3 rounded-3 mb-3" style="background-color: var(--bg-input);">
               <div class="form-check form-switch mb-2">
                 <input class="form-check-input" type="checkbox" id="cronoAgendarReforco" onchange="toggleReforcoFields()">
                 <label class="form-check-label fw-bold small" for="cronoAgendarReforco">Agendar próximo reforço automaticamente?</label>

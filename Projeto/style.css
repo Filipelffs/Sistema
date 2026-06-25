@@ -800,6 +800,136 @@ body {
   color: var(--text-dark);
 }
 
+/* ── Contraste de Textos no Dark Mode ── */
+
+/* Textos Bootstrap hardcoded que não respeitam tema */
+[data-theme="dark"] .text-dark {
+  color: var(--text-dark) !important;
+}
+
+[data-theme="dark"] .text-secondary {
+  color: #b0b8cc !important;
+}
+
+[data-theme="dark"] .text-muted {
+  color: #9AA0B4 !important;
+}
+
+/* Item-card body — parágrafos com texto escuro */
+[data-theme="dark"] .item-card-body p,
+[data-theme="dark"] .item-card-body p strong {
+  color: var(--text-dark);
+}
+
+[data-theme="dark"] .item-card-body .text-muted,
+[data-theme="dark"] .item-card-body .small {
+  color: #9AA0B4 !important;
+}
+
+/* Badge bg-light text-dark (ex: lote na lista de animais) */
+[data-theme="dark"] .badge.bg-light {
+  background-color: rgba(255,255,255,0.1) !important;
+  color: var(--text-dark) !important;
+  border-color: rgba(255,255,255,0.15) !important;
+}
+
+/* Células de tabela com text-dark hardcoded */
+[data-theme="dark"] td.text-dark,
+[data-theme="dark"] td.fw-semibold,
+[data-theme="dark"] .fw-semibold.text-dark {
+  color: var(--text-dark) !important;
+}
+
+/* Cabeçalho de tabela Bootstrap table-light */
+[data-theme="dark"] .table-light,
+[data-theme="dark"] .table-light th,
+[data-theme="dark"] .table-light td {
+  background-color: #141624 !important;
+  color: var(--text-muted) !important;
+  border-color: rgba(255,255,255,0.07) !important;
+}
+
+/* Rodapé de modal com bg-light */
+[data-theme="dark"] .modal-footer.bg-light,
+[data-theme="dark"] .modal-body.bg-light,
+[data-theme="dark"] .bg-light {
+  background-color: #141624 !important;
+}
+
+/* Labels de formulário dentro de modais */
+[data-theme="dark"] .form-label {
+  color: var(--text-dark);
+}
+
+/* Estoque de vacinas — card-estoque (página lista_vacinas) */
+[data-theme="dark"] .card-estoque {
+  background-color: #1a1d2e !important;
+  border-color: rgba(255,255,255,0.08) !important;
+  color: var(--text-dark);
+}
+
+[data-theme="dark"] .card-estoque h5,
+[data-theme="dark"] .card-estoque .fw-bold {
+  color: var(--text-dark) !important;
+}
+
+[data-theme="dark"] .card-estoque strong.text-dark {
+  color: var(--text-dark) !important;
+}
+
+[data-theme="dark"] .card-estoque .text-muted {
+  color: #9AA0B4 !important;
+}
+
+[data-theme="dark"] .card-estoque .text-secondary {
+  color: #b0b8cc !important;
+}
+
+/* Nav pills do estoque de vacinas */
+[data-theme="dark"] .nav-pills .nav-link {
+  color: #4ecf9e;
+  border-color: rgba(78,207,158,0.4);
+}
+
+[data-theme="dark"] .nav-pills .nav-link.active {
+  background-color: var(--primary-green);
+  color: white;
+  border-color: var(--primary-green);
+}
+
+/* Input-group da busca (lupa Bootstrap style) */
+[data-theme="dark"] .input-group-text {
+  background-color: #1e2130 !important;
+  border-color: rgba(255,255,255,0.12) !important;
+  color: #9AA0B4 !important;
+}
+
+[data-theme="dark"] .input-group .form-control {
+  background-color: #1e2130 !important;
+  border-color: rgba(255,255,255,0.12) !important;
+  color: var(--text-dark) !important;
+}
+
+[data-theme="dark"] .input-group .form-control::placeholder {
+  color: #6b7280 !important;
+}
+
+/* Badge de tipo (span border-secondary) */
+[data-theme="dark"] .border-secondary {
+  border-color: rgba(255,255,255,0.2) !important;
+  color: #b0b8cc !important;
+}
+
+/* Small text nos cards de estoque */
+[data-theme="dark"] .small.text-secondary {
+  color: #b0b8cc !important;
+}
+
+/* Formulário modal-footer com bg-light no modal novo usuario */
+[data-theme="dark"] .rounded-bottom-4.bg-light {
+  background-color: #141624 !important;
+}
+
 /* Login (não afetado pelo dark mode) */
 [data-theme="dark"] .login-container {
   background: #1a1d2e;

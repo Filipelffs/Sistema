@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 require_once "sessao.php";
 ?>
 <!DOCTYPE html>
@@ -65,7 +65,7 @@ require_once "sessao.php";
           <input type="hidden" id="editAplId" />
           <div class="mb-3">
             <label class="form-label fw-semibold">Vacina / Medicamento</label>
-            <input type="text" id="editAplItem" class="form-control" readonly disabled style="background-color: #e9ecef; color: #6c757d;" />
+            <input type="text" id="editAplItem" class="form-control" readonly disabled />
           </div>
           <div class="mb-3">
             <label class="form-label fw-semibold">Dose / Tipo</label>

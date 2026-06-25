@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 require_once "sessao.php";
 require_once "../Banco/conexao.php";
 
@@ -84,16 +84,23 @@ if ($resLotes) {
           </div>
           <div class="mb-3">
             <label class="form-label fw-semibold">Número do Brinco</label>
-            <input type="text" id="editNumero" class="form-control" readonly disabled style="background-color: #e9ecef; color: #6c757d;" />
+            <input type="text" id="editNumero" class="form-control" readonly disabled />
             <small class="text-muted"><i class="bi bi-info-circle"></i> Gerado automaticamente</small>
           </div>
           <div class="mb-3">
             <label class="form-label fw-semibold">Espécie</label>
-            <input type="text" id="editEspecie" class="form-control" />
+            <select id="editEspecie" class="form-select" onchange="onEspecieMudouEditar()">
+              <option value="" disabled>Selecione a espécie</option>
+              <option value="Bovino">Bovino</option>
+              <option value="Ovino">Ovino</option>
+              <option value="Caprino">Caprino</option>
+            </select>
           </div>
           <div class="mb-3">
             <label class="form-label fw-semibold">Raça</label>
-            <input type="text" id="editRaca" class="form-control" />
+            <select id="editRaca" class="form-select" disabled>
+              <option value="">Selecione a espécie primeiro</option>
+            </select>
           </div>
           <div class="mb-3">
             <label class="form-label fw-semibold">Lote</label>
@@ -114,12 +121,20 @@ if ($resLotes) {
           <div class="row">
             <div class="col-6 mb-3">
               <label class="form-label fw-semibold">Pai</label>
-              <input type="text" id="editPai" class="form-control" />
+              <select id="editPai" class="form-select" disabled>
+                <option value="">Selecione a espécie primeiro</option>
+              </select>
             </div>
             <div class="col-6 mb-3">
               <label class="form-label fw-semibold">Mãe</label>
-              <input type="text" id="editMae" class="form-control" />
+              <select id="editMae" class="form-select" disabled>
+                <option value="">Selecione a espécie primeiro</option>
+              </select>
             </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Peso (kg)</label>
+            <input type="number" step="0.01" id="editPeso" class="form-control" placeholder="Ex: 150.5" />
           </div>
           <div class="mb-3">
             <label class="form-label fw-semibold">Data de Nascimento</label>
@@ -230,16 +245,128 @@ if ($resLotes) {
       }
     }
 
+    // Raças por espécie (de acordo com o cadastro)
+    const racasPorEspecie = {
+      Bovino:  ['Holstein-Frísia','Hereford','Angus','Simental','Limousin','Azul-Belga','Belted Galloway','Braford'],
+      Ovino:   ['Dorper','Santa-Inês','Suffolk','Texel','Morada-Nova'],
+      Caprino: ['Boer','Pigmeu','Saanen','Moxotó','Savana','Alpina','Canindé']
+    };
+
+    function onEspecieMudouEditar() {
+      const especie = document.getElementById('editEspecie').value;
+      const animalId = parseInt(document.getElementById("editAnimalId").value) || 0;
+      atualizarRacasEditar(especie);
+      atualizarPaiMaeEditar(especie, 'Não informado', 'Não informado', animalId);
+    }
+
+    function atualizarRacasEditar(especie, valorSelecionado = '') {
+      const sel = document.getElementById('editRaca');
+      sel.innerHTML = '<option value="">Nenhuma / Não especificada</option>';
+      if (especie && racasPorEspecie[especie]) {
+        racasPorEspecie[especie].forEach(r => {
+          const op = document.createElement('option');
+          op.value = r;
+          op.textContent = r;
+          if (r === valorSelecionado) {
+            op.selected = true;
+          }
+          sel.appendChild(op);
+        });
+        sel.disabled = false;
+      } else {
+        sel.innerHTML = '<option value="">Selecione a espécie primeiro</option>';
+        sel.disabled = true;
+      }
+    }
+
+    function atualizarPaiMaeEditar(especie, paiSelecionado = '', maeSelecionado = '', idAnimalAtual = 0) {
+      const selPai = document.getElementById('editPai');
+      const selMae = document.getElementById('editMae');
+
+      if (!especie) {
+        selPai.innerHTML = '<option value="">Selecione a espécie primeiro</option>';
+        selPai.disabled = true;
+        selMae.innerHTML = '<option value="">Selecione a espécie primeiro</option>';
+        selMae.disabled = true;
+        return;
+      }
+
+      // Normaliza valores nulos/vazios para "Não informado"
+      if (!paiSelecionado) paiSelecionado = 'Não informado';
+      if (!maeSelecionado) maeSelecionado = 'Não informado';
+
+      // Filtra machos da mesma espécie para o PAI (excluindo o próprio animal sendo editado)
+      const machos = animaisList.filter(a =>
+        a.especie.toLowerCase() === especie.toLowerCase() && 
+        a.sexo === 'Macho' && 
+        parseInt(a.id_animal) !== parseInt(idAnimalAtual)
+      );
+      selPai.innerHTML = '<option value="Não informado">Nenhum / Não registrado no sistema</option>';
+      machos.forEach(a => {
+        const op = document.createElement('option');
+        op.value = a.nome_animal;
+        op.textContent = `${a.nome_animal} (${a.numero_brinco || 'sem brinco'})`;
+        if (a.nome_animal === paiSelecionado) {
+          op.selected = true;
+        }
+        selPai.appendChild(op);
+      });
+      // Caso o pai atual seja informado mas não esteja na lista de machos (ex: deletado ou inconsistência), manter selecionado
+      if (paiSelecionado !== 'Não informado' && !machos.some(a => a.nome_animal === paiSelecionado)) {
+        const op = document.createElement('option');
+        op.value = paiSelecionado;
+        op.textContent = `${paiSelecionado} (atual)`;
+        op.selected = true;
+        selPai.appendChild(op);
+      }
+      selPai.disabled = false;
+
+      // Filtra fêmeas da mesma espécie para a MÃE (excluindo o próprio animal sendo editado)
+      const femeas = animaisList.filter(a =>
+        a.especie.toLowerCase() === especie.toLowerCase() && 
+        a.sexo === 'Fêmea' && 
+        parseInt(a.id_animal) !== parseInt(idAnimalAtual)
+      );
+      selMae.innerHTML = '<option value="Não informado">Nenhuma / Não registrada no sistema</option>';
+      femeas.forEach(a => {
+        const op = document.createElement('option');
+        op.value = a.nome_animal;
+        op.textContent = `${a.nome_animal} (${a.numero_brinco || 'sem brinco'})`;
+        if (a.nome_animal === maeSelecionado) {
+          op.selected = true;
+        }
+        selMae.appendChild(op);
+      });
+      // Caso a mãe atual seja informada mas não esteja na lista de fêmeas, manter selecionada
+      if (maeSelecionado !== 'Não informado' && !femeas.some(a => a.nome_animal === maeSelecionado)) {
+        const op = document.createElement('option');
+        op.value = maeSelecionado;
+        op.textContent = `${maeSelecionado} (atual)`;
+        op.selected = true;
+        selMae.appendChild(op);
+      }
+      selMae.disabled = false;
+    }
+
     function editarAnimal(animal) {
+      const idAnimalAtual = parseInt(animal.id_animal);
       document.getElementById("editAnimalId").value = animal.id_animal;
       document.getElementById("editNome").value = animal.nome_animal;
       document.getElementById("editNumero").value = animal.numero_brinco;
+      
+      // Define a espécie
       document.getElementById("editEspecie").value = animal.especie;
-      document.getElementById("editRaca").value = animal.raca;
+      
+      // Carrega raças correspondentes
+      atualizarRacasEditar(animal.especie, animal.raca);
+      
       document.getElementById("editLote").value = animal.id_lote || '';
       document.getElementById("editSexo").value = animal.sexo;
-      document.getElementById("editPai").value = animal.pai;
-      document.getElementById("editMae").value = animal.mae;
+      
+      // Carrega pais correspondentes da mesma espécie
+      atualizarPaiMaeEditar(animal.especie, animal.pai, animal.mae, idAnimalAtual);
+
+      document.getElementById("editPeso").value = animal.peso || '';
       document.getElementById("editDataNasc").value = animal.data_nascimento;
 
       new bootstrap.Modal(document.getElementById("modalEditarAnimal")).show();
@@ -259,6 +386,7 @@ if ($resLotes) {
         sexo: document.getElementById("editSexo").value,
         pai: document.getElementById("editPai").value,
         mae: document.getElementById("editMae").value,
+        peso: document.getElementById("editPeso").value,
         data_nascimento: document.getElementById("editDataNasc").value
       };
 

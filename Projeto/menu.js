@@ -1,13 +1,22 @@
+/**
+ * menu.js — Sistema de Vacinação Animal
+ * Aplica tema escuro imediatamente via localStorage (evita flash)
+ */
+(function () {
+  if (localStorage.getItem("tema_escuro") === "true") {
+    document.documentElement.setAttribute("data-theme", "dark");
+  }
+})();
+
 document.addEventListener("DOMContentLoaded", function () {
   const body = document.body;
-
   if (body.classList.contains("login-body")) return;
 
-  // ── Dados da sessão ───────────────────────────────────────
+  // ── Dados da sessão ──────────────────────────────────────
   function getCookie(name) {
-    const value = `; ${document.cookie}`;
-    const parts = value.split(`; ${name}=`);
-    if (parts.length === 2) return decodeURIComponent(parts.pop().split(";").shift());
+    const v = `; ${document.cookie}`;
+    const p = v.split(`; ${name}=`);
+    if (p.length === 2) return decodeURIComponent(p.pop().split(";").shift());
     return null;
   }
 
@@ -16,15 +25,15 @@ document.addEventListener("DOMContentLoaded", function () {
   const userTipo = getCookie("usuario_tipo") || window.USER_SESSION?.tipo || "veterinario";
   const isAdmin  = userTipo === "admin";
 
-  // ── Detecção de página ────────────────────────────────────
+  // ── Detecção de página ───────────────────────────────────
   const currentPath    = decodeURIComponent(window.location.pathname.split("/").pop());
   const inVacinaFolder = window.location.pathname.includes("/vacina/");
   const prefix         = inVacinaFolder ? "../" : "";
 
-  // Helper: verifica se a página atual corresponde a alguma das chaves
+  // Helper: verifica se a página atual bate com alguma das chaves
   const isOn = (...keys) => keys.some(k => currentPath.includes(k));
 
-  // Título da navbar mobile — mapa em vez de cadeia de else-if
+  // Título mobile — mapa em vez de cadeia de else-if
   const PAGE_TITLES = {
     Dashboard:            "DASHBOARD",
     cadastro_animal:      "CADASTRO DE ANIMAL",
@@ -41,15 +50,38 @@ document.addEventListener("DOMContentLoaded", function () {
     Usuarios:             "USUÁRIOS",
     AcessoNegado:         "ACESSO RESTRITO",
   };
-  const pageTitle = Object.entries(PAGE_TITLES).find(([key]) => currentPath.includes(key))?.[1] ?? "Vacinação Animal";
+  const pageTitle = Object.entries(PAGE_TITLES)
+    .find(([key]) => currentPath.includes(key))?.[1] ?? "Vacinação Animal";
 
-  // Estado dos submenus (calculado uma vez, reutilizado em vários lugares)
+  // IMPORTANTE: submenus com prefixos exclusivos para não conflitar
+  // "animal" sozinho capturaria "modulo_animal", "lista_animal" E "cronograma_animal" etc.
+  // Por isso usamos os prefixos de arquivo exatos.
+  const ANIMAL_PAGES = ["cadastro_animal", "lista_animal", "modulo_animal", "ficha_animal"];
+  const SAUDE_PAGES  = ["cronograma", "registro_aplicacao", "historico_de_vacinas", "lista_vacinas", "vacina", "Vacina"];
+
   const submenu = {
-    animal: isOn("animal"),
-    saude:  isOn("vacina", "Vacina", "registro_aplicacao", "cronograma", "historico_de_vacinas", "lista_vacinas"),
+    animal: ANIMAL_PAGES.some(p => currentPath.includes(p)),
+    saude:  SAUDE_PAGES.some(p => currentPath.includes(p)),
   };
 
-  // ── Navbar Mobile ─────────────────────────────────────────
+  // ── Modo Escuro ──────────────────────────────────────────
+  let darkMode = localStorage.getItem("tema_escuro") === "true";
+
+  function applyTheme(dark) {
+    if (dark) {
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.documentElement.removeAttribute("data-theme");
+    }
+    localStorage.setItem("tema_escuro", dark ? "true" : "false");
+    // Atualiza ícone do botão se já estiver no DOM
+    const btn = document.getElementById("btnTema");
+    if (btn) btn.innerHTML = dark
+      ? `<i class="bi bi-sun-fill"></i>`
+      : `<i class="bi bi-moon-stars-fill"></i>`;
+  }
+
+  // ── Navbar Mobile ────────────────────────────────────────
   const mobileNavbar = document.createElement("div");
   mobileNavbar.className = "mobile-navbar";
   mobileNavbar.innerHTML = `
@@ -60,7 +92,7 @@ document.addEventListener("DOMContentLoaded", function () {
     <div style="width: 24px;"></div>
   `;
 
-  // ── Sidebar ───────────────────────────────────────────────
+  // ── Sidebar ──────────────────────────────────────────────
   const sidebar = document.createElement("nav");
   sidebar.className = "menu-lateral";
   sidebar.id = "sidebarMenu";
@@ -85,7 +117,7 @@ document.addEventListener("DOMContentLoaded", function () {
         <li class="nav-item">
           <a class="nav-link d-flex justify-content-between align-items-center ${submenu.animal ? "active" : ""}"
              data-bs-toggle="collapse" href="#menuAnimais" role="button"
-             aria-expanded="${submenu.animal}" aria-controls="menuAnimais">
+             aria-expanded="${submenu.animal ? "true" : "false"}" aria-controls="menuAnimais">
             <span><i class="bi bi-plugin"></i> Animais</span>
             <i class="bi bi-chevron-down small"></i>
           </a>
@@ -93,17 +125,20 @@ document.addEventListener("DOMContentLoaded", function () {
             <ul class="nav flex-column ms-3 mt-1">
               ${isAdmin ? `
               <li>
-                <a class="nav-link py-1 px-3 ${isOn("cadastro_animal") ? "fw-bold text-white" : ""}" href="${prefix}cadastro_animal.php">
+                <a class="nav-link py-1 px-3 ${isOn("cadastro_animal") ? "fw-bold text-white" : ""}"
+                   href="${prefix}cadastro_animal.php">
                   <i class="bi bi-plus-circle"></i> Cadastrar Animal
                 </a>
               </li>` : ""}
               <li>
-                <a class="nav-link py-1 px-3 ${isOn("lista_animal") ? "fw-bold text-white" : ""}" href="${prefix}lista_animal.php">
+                <a class="nav-link py-1 px-3 ${isOn("lista_animal") ? "fw-bold text-white" : ""}"
+                   href="${prefix}lista_animal.php">
                   <i class="bi bi-list-ul"></i> Lista de Animais
                 </a>
               </li>
               <li>
-                <a class="nav-link py-1 px-3 ${isOn("modulo_animal") ? "fw-bold text-white" : ""}" href="${prefix}modulo_animal.php">
+                <a class="nav-link py-1 px-3 ${isOn("modulo_animal") ? "fw-bold text-white" : ""}"
+                   href="${prefix}modulo_animal.php">
                   <i class="bi bi-info-circle"></i> Módulo Animal
                 </a>
               </li>
@@ -115,29 +150,33 @@ document.addEventListener("DOMContentLoaded", function () {
         <li class="nav-item">
           <a class="nav-link d-flex justify-content-between align-items-center ${submenu.saude ? "active" : ""}"
              data-bs-toggle="collapse" href="#menuSaude" role="button"
-             aria-expanded="${submenu.saude}" aria-controls="menuSaude">
+             aria-expanded="${submenu.saude ? "true" : "false"}" aria-controls="menuSaude">
             <span><i class="bi bi-heart-pulse-fill"></i> Saúde</span>
             <i class="bi bi-chevron-down small"></i>
           </a>
           <div class="collapse ${submenu.saude ? "show" : ""}" id="menuSaude">
             <ul class="nav flex-column ms-3 mt-1">
               <li>
-                <a class="nav-link py-1 px-3 ${isOn("cronograma") ? "fw-bold text-white" : ""}" href="${prefix}cronograma.php">
+                <a class="nav-link py-1 px-3 ${isOn("cronograma") ? "fw-bold text-white" : ""}"
+                   href="${prefix}cronograma.php">
                   <i class="bi bi-calendar-event"></i> Cronograma
                 </a>
               </li>
               <li>
-                <a class="nav-link py-1 px-3 ${isOn("registro_aplicacao") ? "fw-bold text-white" : ""}" href="${prefix}registro_aplicacao.php">
+                <a class="nav-link py-1 px-3 ${isOn("registro_aplicacao") ? "fw-bold text-white" : ""}"
+                   href="${prefix}registro_aplicacao.php">
                   <i class="bi bi-plus-circle"></i> Nova Aplicação
                 </a>
               </li>
               <li>
-                <a class="nav-link py-1 px-3 ${isOn("historico_de_vacinas") ? "fw-bold text-white" : ""}" href="${prefix}historico_de_vacinas.php">
+                <a class="nav-link py-1 px-3 ${isOn("historico_de_vacinas") ? "fw-bold text-white" : ""}"
+                   href="${prefix}historico_de_vacinas.php">
                   <i class="bi bi-clock-history"></i> Histórico Vacinas
                 </a>
               </li>
               <li>
-                <a class="nav-link py-1 px-3 ${isOn("lista_vacinas") ? "fw-bold text-white" : ""}" href="${prefix}vacina/lista_vacinas.php">
+                <a class="nav-link py-1 px-3 ${isOn("lista_vacinas") ? "fw-bold text-white" : ""}"
+                   href="${prefix}vacina/lista_vacinas.php">
                   <i class="bi bi-box"></i> Estoque (Vacina/Med)
                 </a>
               </li>
@@ -177,11 +216,14 @@ document.addEventListener("DOMContentLoaded", function () {
       </ul>
     </div>
 
-    <!-- Perfil + Sair -->
+    <!-- Tema + Perfil + Sair -->
     <div class="mt-auto">
+
+      <!-- Perfil -->
       <div class="d-flex align-items-center gap-2 mb-3 p-2 bg-white bg-opacity-10 rounded">
         ${userFoto
-          ? `<img src="${userFoto}" alt="Avatar" class="rounded-circle border" style="width:38px;height:38px;object-fit:cover;flex-shrink:0;">`
+          ? `<img src="${userFoto}" alt="Avatar" class="rounded-circle border"
+                  style="width:38px;height:38px;object-fit:cover;flex-shrink:0;">`
           : `<div class="avatar bg-white text-success rounded-circle d-flex align-items-center justify-content-center fw-bold"
                   style="width:38px;height:38px;font-size:1.1rem;flex-shrink:0;">
                ${userNome.charAt(0).toUpperCase()}
@@ -197,6 +239,7 @@ document.addEventListener("DOMContentLoaded", function () {
         </div>
       </div>
 
+      <!-- Sair -->
       <a class="btn btn-danger w-100 rounded-pill d-flex align-items-center justify-content-center gap-2"
          href="${prefix}logout.php">
         <i class="bi bi-box-arrow-right"></i>
@@ -205,14 +248,13 @@ document.addEventListener("DOMContentLoaded", function () {
     </div>
   `;
 
-  // ── Monta a estrutura na página ───────────────────────────
+  // ── Monta estrutura ──────────────────────────────────────
   const appContainer = document.createElement("div");
   appContainer.className = "app-container";
 
   const contentWrapper = document.createElement("main");
   contentWrapper.className = "conteudo-principal";
 
-  // Move os filhos existentes do body para o contentWrapper
   Array.from(body.children).forEach(child => {
     if (!["SCRIPT", "LINK", "STYLE"].includes(child.tagName)) {
       contentWrapper.appendChild(child);
@@ -224,9 +266,8 @@ document.addEventListener("DOMContentLoaded", function () {
   appContainer.appendChild(contentWrapper);
   body.appendChild(appContainer);
 
-  // ── Toggle mobile ─────────────────────────────────────────
+  // ── Toggle Mobile sidebar ────────────────────────────────
   const toggleBtn = document.getElementById("toggleMobileMenu");
-
   toggleBtn?.addEventListener("click", function (e) {
     e.stopPropagation();
     sidebar.classList.toggle("active");

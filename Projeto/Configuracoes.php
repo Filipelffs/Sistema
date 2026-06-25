@@ -173,11 +173,13 @@ $stmt->close();
     swTema.addEventListener('change', async function () {
       const ativo = this.checked;
 
-      // Aplica imediatamente na página atual
+      // Aplica imediatamente na página atual e sincroniza localStorage
       if (ativo) {
         document.documentElement.setAttribute('data-theme', 'dark');
+        localStorage.setItem("tema_escuro", "true");
       } else {
         document.documentElement.removeAttribute('data-theme');
+        localStorage.setItem("tema_escuro", "false");
       }
 
       // Salva no banco

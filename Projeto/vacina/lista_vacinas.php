@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 require_once "../sessao.php";
 $isAllowed = in_array($_SESSION['usuario_tipo'], ['admin', 'veterinario']);
 ?>
@@ -24,27 +24,19 @@ $isAllowed = in_array($_SESSION['usuario_tipo'], ['admin', 'veterinario']);
   <link rel="stylesheet" href="../style.css">
   <style>
     .card-estoque {
-      background-color: #f8f9fa;
-      border: 1px solid #dee2e6;
       border-radius: 12px;
       margin-bottom: 15px;
       transition: all 0.3s;
     }
     .card-estoque.esgotado {
-      background-color: #e9ecef;
-      opacity: 0.7;
+      opacity: 0.65;
     }
     .status-badge {
       font-size: 0.8rem;
       padding: 0.4em 0.8em;
       border-radius: 20px;
     }
-    .nav-pills .nav-link.active {
-      background-color: #198754;
-    }
     .nav-pills .nav-link {
-      color: #198754;
-      border: 1px solid #198754;
       border-radius: 20px;
       margin-right: 5px;
     }
@@ -65,25 +57,29 @@ $isAllowed = in_array($_SESSION['usuario_tipo'], ['admin', 'veterinario']);
   </div>
 
   <!-- Busca e Filtros -->
-  <div class="row mb-4 g-2">
-    <div class="col-12 col-md-6">
-      <div class="input-group">
-        <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
-        <input type="text" id="inputBusca" class="form-control border-start-0" placeholder="Buscar produto..." onkeyup="filtrarLista()">
+  <div class="card card-premium mb-4">
+    <div class="card-body">
+      <div class="row align-items-center g-3">
+        <div class="col-12 col-md-6">
+          <div class="input-icon-wrapper">
+            <i class="bi bi-search"></i>
+            <input type="text" id="inputBusca" class="form-control form-control-custom" placeholder="Buscar produto..." onkeyup="filtrarLista()">
+          </div>
+        </div>
+        <div class="col-12 col-md-6 text-md-end">
+          <ul class="nav nav-pills justify-content-md-end justify-content-center" id="filtrosEstoque">
+            <li class="nav-item">
+              <a class="nav-link active" href="#" onclick="mudarAba(event, 'todos')">Todos</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#" onclick="mudarAba(event, 'vacina')">Vacinas</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#" onclick="mudarAba(event, 'medicamento')">Medicamentos</a>
+            </li>
+          </ul>
+        </div>
       </div>
-    </div>
-    <div class="col-12 col-md-6 text-md-end mt-2 mt-md-0">
-      <ul class="nav nav-pills justify-content-md-end justify-content-center" id="filtrosEstoque">
-        <li class="nav-item">
-          <a class="nav-link active" href="#" onclick="mudarAba(event, 'todos')">Todos</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#" onclick="mudarAba(event, 'vacina')">Vacinas</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#" onclick="mudarAba(event, 'medicamento')">Medicamentos</a>
-        </li>
-      </ul>
     </div>
   </div>
 
@@ -249,17 +245,17 @@ $isAllowed = in_array($_SESSION['usuario_tipo'], ['admin', 'veterinario']);
               <div class="d-flex justify-content-between align-items-start mb-2">
                 <div class="d-flex align-items-center gap-2">
                   <i class="bi ${icon} fs-4 text-${isEsgotado ? 'secondary' : 'success'}"></i>
-                  <h5 class="mb-0 fw-bold text-dark">${p.nome}</h5>
+                  <h5 class="mb-0 fw-bold">${p.nome}</h5>
                 </div>
                 <span class="badge ${badgeClass} status-badge">${badgeText}</span>
               </div>
               
-              <div class="text-muted small mb-3">
+              <div class="small mb-3 text-muted">
                 <span class="text-capitalize border border-secondary rounded px-2 py-1 me-2">${p.tipo}</span>
-                Disponível: <strong class="text-dark fs-6">${qtd}</strong>
+                Disponível: <strong class="fs-6">${qtd}</strong>
               </div>
 
-              <div class="row g-2 small text-secondary mb-3">
+              <div class="row g-2 small mb-3" style="color:var(--text-muted)">
                 <div class="col-6">
                   <i class="bi bi-calendar-check me-1"></i> Fab: ${formatDate(p.data_fabricacao)}
                 </div>
