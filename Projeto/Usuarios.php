@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once "sessao.php";
 checarAcesso("admin"); // Somente admins podem ver e alterar usuários
 
@@ -117,7 +117,7 @@ if ($result) {
 }
 ?>
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-br" <?= $TEMA_ESCURO ? 'data-theme="dark"' : '' ?>>
 
 <head>
   <meta charset="UTF-8">

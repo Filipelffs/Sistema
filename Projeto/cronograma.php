@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once "sessao.php";
 require_once "../Banco/conexao.php";
 
@@ -45,7 +45,7 @@ $appliedMonth = $resAppliedMonth ? intval($resAppliedMonth->fetch_assoc()['total
 $appliedMonthDisplay = max(85, $appliedMonth);
 ?>
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-br" <?= $TEMA_ESCURO ? 'data-theme="dark"' : '' ?>>
 <head>
   <script>
     window.USER_SESSION = {

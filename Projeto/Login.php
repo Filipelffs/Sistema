@@ -122,10 +122,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 </div>
             </div>
 
-            <div class="footer-text">
-                Não tem uma conta?
-                <a href="Cadastro.php">Cadastre-se</a>
-            </div>
+
         </form>
     </div>
     

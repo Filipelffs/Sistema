@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once "sessao.php";
 require_once "../Banco/conexao.php";
  
@@ -115,7 +115,7 @@ $chartVetNomes = []; $chartVetQtds = [];
 if ($resCV) { while ($r = $resCV->fetch_assoc()) { $chartVetNomes[] = $r['tecnico']; $chartVetQtds[] = (int)$r['qtd']; } }
 ?>
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-br" <?= $TEMA_ESCURO ? 'data-theme="dark"' : '' ?>>
 <head>
  <script>
  window.USER_SESSION = {

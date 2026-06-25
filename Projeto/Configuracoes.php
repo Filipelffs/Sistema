@@ -12,12 +12,31 @@ $user = $res->fetch_assoc();
 if (!$user['foto']) {
     $user['foto'] = 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=200';
 }
+
+// Busca preferência de modo escuro do banco
+$stmt = $conn->prepare("SELECT tema_escuro FROM configuracoes WHERE id_usuario = ?");
+$stmt->bind_param("i", $id);
+$stmt->execute();
+$resConf = $stmt->get_result();
+$temaEscuro = false;
+if ($resConf->num_rows > 0) {
+    $conf = $resConf->fetch_assoc();
+    $temaEscuro = (bool)$conf['tema_escuro'];
+}
+$stmt->close();
 ?>
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-br" <?= $temaEscuro ? 'data-theme="dark"' : '' ?>>
 
 <head>
   <script>
+    // Aplica tema escuro ANTES do render para evitar flash
+    (function() {
+      const temaEscuro = <?= $temaEscuro ? 'true' : 'false' ?>;
+      if (temaEscuro) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+    })();
     window.USER_SESSION = {
       id: <?php echo json_encode($_SESSION['usuario_id']); ?>,
       nome: <?php echo json_encode($_SESSION['usuario_nome']); ?>,
@@ -25,15 +44,13 @@ if (!$user['foto']) {
       tipo: <?php echo json_encode($_SESSION['usuario_tipo']); ?>,
       foto: <?php echo json_encode($user['foto']); ?>
     };
+    window.TEMA_ESCURO_INICIAL = <?= $temaEscuro ? 'true' : 'false' ?>;
   </script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Configurações - Vacinação Animal</title>
-  <!-- Bootstrap -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <!-- Bootstrap Icons -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-  <!-- CSS -->
   <link rel="stylesheet" href="style.css">
 </head>
 
@@ -91,10 +108,31 @@ if (!$user['foto']) {
       </div>
     </div>
 
-    <!-- Preferences & Security (Right) -->
+    <!-- Preferences (Right) -->
     <div class="col-12 col-md-6 mb-4">
 
+      <!-- Aparência -->
+      <div class="card card-premium shadow-sm mb-4">
+        <div class="card-header-green">
+          <span>Aparência</span>
+          <i class="bi bi-palette-fill"></i>
+        </div>
+        <div class="card-body">
+          <div class="switch-group">
+            <div>
+              <h6 class="fw-bold mb-1">
+                <i class="bi bi-moon-stars-fill me-2 text-warning"></i>Modo Escuro
+              </h6>
+              <small class="text-muted">Alterna entre tema claro e escuro em todo o sistema</small>
+            </div>
+            <div class="form-check form-switch">
+              <input class="form-check-input" type="checkbox" id="swTemaEscuro" <?= $temaEscuro ? 'checked' : '' ?>>
+            </div>
+          </div>
+        </div>
+      </div>
 
+      <!-- Alertas -->
       <div class="card card-premium shadow-sm">
         <div class="card-header-green">
           <span>Preferências de Alertas</span>
@@ -121,19 +159,43 @@ if (!$user['foto']) {
           </div>
         </div>
       </div>
+
     </div>
   </div>
 
-  <!-- Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  <!-- Common Menu System -->
   <script src="menu.js"></script>
 
   <script>
+    // ─── Modo Escuro ────────────────────────────────────────────────
+    const swTema = document.getElementById('swTemaEscuro');
+
+    swTema.addEventListener('change', async function () {
+      const ativo = this.checked;
+
+      // Aplica imediatamente na página atual
+      if (ativo) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      } else {
+        document.documentElement.removeAttribute('data-theme');
+      }
+
+      // Salva no banco
+      try {
+        await fetch('configuracoes_action.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tema_escuro: ativo })
+        });
+      } catch (e) {
+        console.error('Erro ao salvar preferências:', e);
+      }
+    });
+
+    // ─── Edição de Perfil ────────────────────────────────────────────
     function habilitarEdicaoPerfil() {
       document.getElementById("userNome").classList.add("d-none");
       document.getElementById("userEmail").classList.add("d-none");
-      
       document.getElementById("perfilEditInputs").classList.remove("d-none");
       document.getElementById("btnEditarPerfil").classList.add("d-none");
       document.getElementById("btnSalvarPerfil").classList.remove("d-none");
@@ -157,13 +219,13 @@ if (!$user['foto']) {
           body: JSON.stringify(data)
         });
         const result = await res.json();
-        if(result.success) {
+        if (result.success) {
           alert(result.message);
           window.location.reload();
         } else {
           alert("Erro ao atualizar perfil.");
         }
-      } catch(e) {
+      } catch (e) {
         alert("Erro de conexão.");
       } finally {
         btn.disabled = false;

@@ -1,9 +1,9 @@
-<?php
+﻿<?php
 require_once "../sessao.php";
 $isAllowed = in_array($_SESSION['usuario_tipo'], ['admin', 'veterinario']);
 ?>
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-br" <?= $TEMA_ESCURO ? 'data-theme="dark"' : '' ?>>
 <head>
   <script>
     window.USER_SESSION = {
