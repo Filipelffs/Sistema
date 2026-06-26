@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 require_once "sessao.php";
 ?>
 <!DOCTYPE html>
@@ -109,6 +109,10 @@ require_once "sessao.php";
   <!-- Script to update KPIs and Alerts dynamically -->
   <script>
     document.addEventListener("DOMContentLoaded", async function () {
+      if (document.documentElement.getAttribute('data-theme') === 'dark') {
+        Chart.defaults.color = '#ffffff';
+        Chart.defaults.borderColor = 'rgba(255, 255, 255, 0.15)';
+      }
       try {
         const response = await fetch('dashboard_data.php');
         const result = await response.json();

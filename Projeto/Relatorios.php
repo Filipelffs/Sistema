@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 require_once "sessao.php";
 require_once "../Banco/conexao.php";
  
@@ -1018,8 +1018,15 @@ function initCharts() {
  if (chartsInit) return;
  chartsInit = true;
  
+ const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+ if (isDark) {
+   Chart.defaults.color = '#ffffff';
+   Chart.defaults.borderColor = 'rgba(255, 255, 255, 0.15)';
+ }
+ const gridColor = isDark ? 'rgba(255, 255, 255, 0.1)' : '#f0f0f0';
+ 
  const palette = {
- green: '#1FAF7A', amber: '#F59E0B', red: '#EF4444',
+ green: isDark ? '#158C5D' : '#1FAF7A', amber: '#F59E0B', red: '#EF4444',
  blue: '#3B82F6', purple: '#8B5CF6', teal: '#14B8A6'
  };
  
@@ -1037,7 +1044,7 @@ function initCharts() {
  borderRadius: 8
  }]
  },
- options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: '#f0f0f0' } }, x: { grid: { display: false } } } }
+ options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: gridColor } }, x: { grid: { display: false } } } }
  });
  
  // Chart 2 – Status (doughnut)
@@ -1069,7 +1076,7 @@ function initCharts() {
  borderRadius: 8
  }]
  },
- options: { indexAxis: 'y', responsive: true, plugins: { legend: { display: false } }, scales: { x: { min: 0, max: 100, grid: { color: '#f0f0f0' } }, y: { grid: { display: false } } } }
+ options: { indexAxis: 'y', responsive: true, plugins: { legend: { display: false } }, scales: { x: { min: 0, max: 100, grid: { color: gridColor } }, y: { grid: { display: false } } } }
  });
  
  // Chart 4 – Aplicações por veterinário

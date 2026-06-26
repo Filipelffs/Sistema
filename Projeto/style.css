@@ -639,6 +639,17 @@ body {
   --text-dark: #E8EAF0;
   --text-muted: #9AA0B4;
   --bg-input: #1e2130;
+  --primary-green: #158C5D;
+  --primary-hover: #106643;
+  --success-color: #158C5D;
+
+  /* Cores especificas para a tela de Relatorios */
+  --green-1: #158C5D;
+  --green-2: #106643;
+  --green-3: #0b4c32;
+  --surface: #1a1d2e;
+  --bg: #0f1117;
+  --border: rgba(255,255,255,0.07);
 }
 
 [data-theme="dark"] body {
@@ -952,5 +963,129 @@ body {
 
 [data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
   background: #3a3d55;
+}
+
+/* ===================================================
+   DARK MODE CUSTOMIZATIONS (Tabelas, Relatórios e Lotes)
+   =================================================== */
+
+/* Regra Geral para tabelas no Dark Mode */
+[data-theme="dark"] .table td {
+  color: var(--text-dark) !important;
+}
+
+/* Modificações específicas para a tela de Lotes */
+[data-theme="dark"] #lotesContainer .table thead th,
+[data-theme="dark"] .card-body .table thead.table-light th {
+  background-color: #ffffff !important;
+  color: #1a1d2e !important;
+}
+[data-theme="dark"] #lotesContainer .table tbody td:first-child {
+  color: #ffffff !important;
+}
+
+/* Modificações específicas para o Filtro de Pesquisa (Relatórios) */
+[data-theme="dark"] .filter-card {
+  background-color: #ffffff !important;
+  border-color: #e0e0e0 !important;
+}
+[data-theme="dark"] .filter-card .form-label {
+  color: #555555 !important;
+}
+[data-theme="dark"] .filter-card .sec-heading {
+  color: var(--green-1) !important;
+}
+[data-theme="dark"] .filter-card .form-control,
+[data-theme="dark"] .filter-card .form-select {
+  background-color: #1e2130 !important;
+  color: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+}
+[data-theme="dark"] .filter-card .form-control::placeholder,
+[data-theme="dark"] .filter-card .form-select::placeholder {
+  color: rgba(255, 255, 255, 0.75) !important;
+}
+[data-theme="dark"] .filter-card input[type="date"] {
+  color: #ffffff !important;
+}
+[data-theme="dark"] .filter-card input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+}
+
+/* Componentes de Relatório no Dark Mode */
+[data-theme="dark"] .fancy-table tbody td {
+  border-bottom-color: rgba(255, 255, 255, 0.07) !important;
+  color: var(--text-dark) !important;
+}
+[data-theme="dark"] .fancy-table thead th {
+  background-color: #141624 !important;
+  color: var(--text-muted) !important;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.1) !important;
+}
+[data-theme="dark"] .fancy-table tbody tr:hover {
+  background-color: rgba(255, 255, 255, 0.04) !important;
+}
+[data-theme="dark"] .tag-especie {
+  background: rgba(59, 130, 246, 0.15) !important;
+  color: #60a5fa !important;
+}
+[data-theme="dark"] .tag-lote {
+  background: rgba(139, 92, 246, 0.15) !important;
+  color: #a78bfa !important;
+}
+[data-theme="dark"] .stbadge-ok {
+  background: rgba(16, 185, 129, 0.15) !important;
+  color: #34d399 !important;
+}
+[data-theme="dark"] .stbadge-pend {
+  background: rgba(245, 158, 11, 0.15) !important;
+  color: #fbbf24 !important;
+}
+[data-theme="dark"] .stbadge-atras {
+  background: rgba(239, 68, 68, 0.15) !important;
+  color: #f87171 !important;
+}
+[data-theme="dark"] .kpi-box .kpi-lbl {
+  color: var(--text-muted) !important;
+}
+[data-theme="dark"] .kpi-total .kpi-icon { background: rgba(59, 130, 246, 0.15) !important; }
+[data-theme="dark"] .kpi-emdia .kpi-icon { background: rgba(21, 140, 93, 0.15) !important; }
+[data-theme="dark"] .kpi-pend .kpi-icon { background: rgba(245, 158, 11, 0.15) !important; }
+[data-theme="dark"] .kpi-atras .kpi-icon { background: rgba(239, 68, 68, 0.15) !important; }
+[data-theme="dark"] .kpi-mes .kpi-icon { background: rgba(139, 92, 246, 0.15) !important; }
+[data-theme="dark"] .kpi-cob .kpi-icon { background: rgba(21, 140, 93, 0.15) !important; }
+[data-theme="dark"] .lote-stat span:first-child {
+  color: var(--text-muted) !important;
+}
+[data-theme="dark"] .lote-card {
+  color: var(--text-dark) !important;
+}
+[data-theme="dark"] .lote-bar {
+  background: rgba(255, 255, 255, 0.1) !important;
+}
+[data-theme="dark"] .rank-bar {
+  background: rgba(255, 255, 255, 0.1) !important;
+}
+[data-theme="dark"] .atras-card {
+  background: rgba(239, 68, 68, 0.1) !important;
+  border-color: rgba(239, 68, 68, 0.2) !important;
+}
+[data-theme="dark"] .atras-card .atras-animal {
+  color: #f87171 !important;
+}
+[data-theme="dark"] .atras-card .atras-detail {
+  color: #fca5a5 !important;
+}
+[data-theme="dark"] .resumo-item {
+  background: #141624 !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+[data-theme="dark"] .resumo-item .r-val {
+  color: var(--text-dark) !important;
+}
+
+/* Lote nos cards da lista de modulo_animal.php */
+[data-theme="dark"] .card .bg-light .text-muted {
+  color: #ffffff !important;
 }
 
