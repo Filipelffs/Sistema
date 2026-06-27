@@ -1,50 +1,50 @@
-<?php
-require_once "sessao.php";
-require_once "../Banco/conexao.php";
+  <?php
+  require_once "sessao.php";
+  require_once "../Banco/conexao.php";
 
-// Fetch lotes
-$resLotes = $conn->query("SELECT id_lote, codigo_lote FROM lotes ORDER BY codigo_lote ASC");
-$lotes = [];
-if ($resLotes) {
-    while($row = $resLotes->fetch_assoc()) { $lotes[] = $row; }
-}
+  // Fetch lotes
+  $resLotes = $conn->query("SELECT id_lote, codigo_lote FROM lotes ORDER BY codigo_lote ASC");
+  $lotes = [];
+  if ($resLotes) {
+      while($row = $resLotes->fetch_assoc()) { $lotes[] = $row; }
+  }
 
-// Fetch species
-$resEspecies = $conn->query("SELECT DISTINCT especie FROM animais WHERE especie IS NOT NULL AND especie != '' ORDER BY especie ASC");
-$especies = [];
-if ($resEspecies) {
-    while($row = $resEspecies->fetch_assoc()) { $especies[] = $row['especie']; }
-}
+  // Fetch species
+  $resEspecies = $conn->query("SELECT DISTINCT especie FROM animais WHERE especie IS NOT NULL AND especie != '' ORDER BY especie ASC");
+  $especies = [];
+  if ($resEspecies) {
+      while($row = $resEspecies->fetch_assoc()) { $especies[] = $row['especie']; }
+  }
 
-// Fetch vaccines
-$resVacinas = $conn->query("SELECT id, nome FROM vacinas_medicamentos WHERE tipo = 'vacina' ORDER BY nome ASC");
-$vacinas = [];
-if ($resVacinas) {
-    while($row = $resVacinas->fetch_assoc()) { $vacinas[] = $row; }
-}
+  // Fetch vaccines
+  $resVacinas = $conn->query("SELECT id, nome FROM vacinas_medicamentos WHERE tipo = 'vacina' ORDER BY nome ASC");
+  $vacinas = [];
+  if ($resVacinas) {
+      while($row = $resVacinas->fetch_assoc()) { $vacinas[] = $row; }
+  }
 
-// Fetch veterinarians (all users who can apply)
-$resVets = $conn->query("SELECT id_usuario, nome FROM usuarios ORDER BY nome ASC");
-$vets = [];
-if ($resVets) {
-    while($row = $resVets->fetch_assoc()) { $vets[] = $row; }
-}
+  // Fetch veterinarians (all users who can apply)
+  $resVets = $conn->query("SELECT id_usuario, nome FROM usuarios ORDER BY nome ASC");
+  $vets = [];
+  if ($resVets) {
+      while($row = $resVets->fetch_assoc()) { $vets[] = $row; }
+  }
 
-// Count summary numbers for Alerts block
-$resAtrasadasAlert = $conn->query("SELECT COUNT(*) as total FROM cronograma_vacinacao WHERE status_cronograma = 'Agendada' AND data_prevista < CURDATE()");
-$qtdAtrasadas = $resAtrasadasAlert ? intval($resAtrasadasAlert->fetch_assoc()['total']) : 0;
+  // Count summary numbers for Alerts block
+  $resAtrasadasAlert = $conn->query("SELECT COUNT(*) as total FROM cronograma_vacinacao WHERE status_cronograma = 'Agendada' AND data_prevista < CURDATE()");
+  $qtdAtrasadas = $resAtrasadasAlert ? intval($resAtrasadasAlert->fetch_assoc()['total']) : 0;
 
-$resHojeAlert = $conn->query("SELECT COUNT(*) as total FROM cronograma_vacinacao WHERE status_cronograma = 'Agendada' AND data_prevista = CURDATE()");
-$qtdHoje = $resHojeAlert ? intval($resHojeAlert->fetch_assoc()['total']) : 0;
+  $resHojeAlert = $conn->query("SELECT COUNT(*) as total FROM cronograma_vacinacao WHERE status_cronograma = 'Agendada' AND data_prevista = CURDATE()");
+  $qtdHoje = $resHojeAlert ? intval($resHojeAlert->fetch_assoc()['total']) : 0;
 
-$resReforcosAlert = $conn->query("SELECT COUNT(*) as total FROM cronograma_vacinacao WHERE status_cronograma = 'Agendada' AND data_prevista > CURDATE() AND data_prevista <= DATE_ADD(CURDATE(), INTERVAL 7 DAY)");
-$qtdReforcos = $resReforcosAlert ? intval($resReforcosAlert->fetch_assoc()['total']) : 0;
+  $resReforcosAlert = $conn->query("SELECT COUNT(*) as total FROM cronograma_vacinacao WHERE status_cronograma = 'Agendada' AND data_prevista > CURDATE() AND data_prevista <= DATE_ADD(CURDATE(), INTERVAL 7 DAY)");
+  $qtdReforcos = $resReforcosAlert ? intval($resReforcosAlert->fetch_assoc()['total']) : 0;
 
-$resAppliedMonth = $conn->query("SELECT COUNT(*) as total FROM aplicacoes WHERE MONTH(data_aplicacao) = MONTH(CURRENT_DATE()) AND YEAR(data_aplicacao) = YEAR(CURRENT_DATE())");
-$appliedMonth = $resAppliedMonth ? intval($resAppliedMonth->fetch_assoc()['total']) : 0;
-$appliedMonthDisplay = max(85, $appliedMonth);
-?>
-<!DOCTYPE html>
+  $resAppliedMonth = $conn->query("SELECT COUNT(*) as total FROM aplicacoes WHERE MONTH(data_aplicacao) = MONTH(CURRENT_DATE()) AND YEAR(data_aplicacao) = YEAR(CURRENT_DATE())");
+  $appliedMonth = $resAppliedMonth ? intval($resAppliedMonth->fetch_assoc()['total']) : 0;
+  $appliedMonthDisplay = $appliedMonth;
+  ?>
+  <!DOCTYPE html>
 <html lang="pt-br" <?= $TEMA_ESCURO ? 'data-theme="dark"' : '' ?>>
 <head>
   <script>
